@@ -5,6 +5,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import net.md_5.bungee.api.chat.ClickEvent;
+import net.onima.onimaapi.players.APIPlayer;
 import net.onima.onimaapi.rank.OnimaPerm;
 import net.onima.onimaapi.utils.JSONMessage;
 import net.onima.onimafaction.OnimaFaction;
@@ -31,7 +32,7 @@ public class FactionOpenArgument extends FactionArgument {
 		Player player = (Player) sender;
 		PlayerFaction faction = null;
 		
-		if ((faction = FPlayer.getByPlayer(player).getFaction()) == null) {
+		if ((faction = FPlayer.getPlayer(player).getFaction()) == null) {
 			player.spigot().sendMessage(new JSONMessage("§cVous avez besoin d'une faction pour pouvoir ouvrir cette dernière !", "§a/f create ", true, "/f create ", ClickEvent.Action.SUGGEST_COMMAND).build());
 			return false;
 		}
@@ -42,7 +43,7 @@ public class FactionOpenArgument extends FactionArgument {
 		}
 		
 		faction.setOpen(!faction.isOpen());
-		faction.broadcast(new JSONMessage("§d§o" + player.getName() + " §7a " + (faction.isOpen() ? "§aouvert" : "§cfermé") + " §7la faction !" , "/f open", true, "/f open"));
+		faction.broadcast(new JSONMessage("§d§o" + APIPlayer.getPlayer(player).getName() + " §7a " + (faction.isOpen() ? "§aouvert" : "§cfermé") + " §7la faction !" , "/f open", true, "/f open"));
 		return true;
 	}
 

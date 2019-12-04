@@ -16,7 +16,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -28,7 +27,6 @@ import net.onima.onimaapi.OnimaAPI;
 import net.onima.onimaapi.rank.OnimaPerm;
 import net.onima.onimaapi.rank.RankType;
 import net.onima.onimaapi.utils.ConfigurationService;
-import net.onima.onimaapi.utils.Methods;
 import net.onima.onimaapi.zone.type.Region;
 import net.onima.onimafaction.events.FactionChatEvent;
 import net.onima.onimafaction.faction.Faction;
@@ -56,31 +54,6 @@ public class EntityListener implements Listener {
 			break;
 		default:
 			break;
-		}
-	}
-	
-	@EventHandler(ignoreCancelled = true)
-	public void onMateAttack(EntityDamageByEntityEvent event) {
-		Entity entity = event.getEntity();
-		
-		if (entity instanceof Player) {
-			Player player = (Player) entity;
-			Player attacker = Methods.getLastAttacker(event);
-				
-			if (attacker == null || attacker.equals(entity)) return;
-				
-			FPlayer fPlayer = FPlayer.getByPlayer(player);
-			FPlayer fAttacker = FPlayer.getByPlayer(attacker);
-			PlayerFaction playerFaction = fPlayer.getFaction();
-			PlayerFaction attackerFaction = fAttacker.getFaction();
-				
-			if (playerFaction != null && attackerFaction != null) {
-				if (playerFaction.getRelation(attackerFaction) == Relation.MEMBER) {
-					attacker.sendMessage("§d§oVous §7ne pouvez pas attaquer " + Relation.MEMBER.getColor() + "§o" + fPlayer.getRole().getRole() + player.getName() + "§7.");
-					event.setCancelled(true);
-				} else if (playerFaction.getRelation(attackerFaction) == Relation.ALLY)
-					attacker.sendMessage("§d§oVous §7avez attaqué " + Relation.ALLY.getColor() + "§o" + fPlayer.getRole().getRole() + player.getName() + "§7, il est votre allié.");
-			}
 		}
 	}
 	
@@ -132,7 +105,7 @@ public class EntityListener implements Listener {
 				Region region = Claim.getClaimAndRegionAt(from);
 				
 				if (!(region instanceof WildernessClaim)) {
-					PlayerFaction playerFaction = FPlayer.getByPlayer(player).getFaction();
+					PlayerFaction playerFaction = FPlayer.getPlayer(player).getFaction();
 					
 					if (!region.getDisplayName(player).equalsIgnoreCase(playerFaction.getDisplayName(player))) {
 						player.sendMessage("§cCe portail aurait été créé dans le territoire de " + region.getDisplayName(player) + ", téléportation annulée...");
@@ -146,31 +119,31 @@ public class EntityListener implements Listener {
 	@EventHandler(ignoreCancelled = true)
 	public void onMemberConnect(PlayerJoinEvent event) {
 		Player player = event.getPlayer();
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
+		FPlayer fPlayer = FPlayer.getPlayer(player);
 		PlayerFaction faction = fPlayer.getFaction();
 		
 		event.setJoinMessage(null);
 		
 		if (faction != null)
-			faction.broadcast(Relation.MEMBER.getColor() + "§o" + fPlayer.getRole().getRole() + player.getName() + " §eest §aconnecté.");
+			faction.broadcast(Relation.MEMBER.getColor() + "§o" + fPlayer.getRole().getRole() + fPlayer.getApiPlayer().getName() + " §eest §aconnecté.");
 	}
 	
 	@EventHandler(ignoreCancelled = true)
 	public void onMemberDisconnect(PlayerQuitEvent event) {
 		Player player = event.getPlayer();
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
+		FPlayer fPlayer = FPlayer.getPlayer(player);
 		PlayerFaction faction = fPlayer.getFaction();
 		
 		event.setQuitMessage(null);
 		
 		if (faction != null)
-			faction.broadcast(Relation.MEMBER.getColor() + "§o" + fPlayer.getRole().getRole() + player.getName() + " §eest §cdéconnecté.");
+			faction.broadcast(Relation.MEMBER.getColor() + "§o" + fPlayer.getRole().getRole() + fPlayer.getApiPlayer().getName() + " §eest §cdéconnecté.");
 	}
 	
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.NORMAL)
 	public void onChat(AsyncPlayerChatEvent event) {
 		Player player = event.getPlayer();
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
+		FPlayer fPlayer = FPlayer.getPlayer(player);
 		String message = event.getMessage();
 		Chat chat = fPlayer.getChat();
 		
@@ -179,13 +152,12 @@ public class EntityListener implements Listener {
 		if (message.startsWith("@") || chat == Chat.STAFF) {
 			message = message.startsWith("@") ? message.substring(1) : message;
 			
-			OnimaAPI.broadcast("§a[" + fPlayer.getApiPlayer().getColoredName() + "] §e» §b" + message, OnimaPerm.ONIMAFACTION_STAFFCHAT_COMMAND);
+			OnimaAPI.broadcast("§a[" + fPlayer.getApiPlayer().getColoredName(true) + "§a] §e» §b" + message, OnimaPerm.ONIMAFACTION_STAFFCHAT_COMMAND);
 			return;
 		}
 		
 		PlayerFaction faction = fPlayer.getFaction();
 		Set<CommandSender> toSend = new HashSet<>();
-		RankType rank = fPlayer.getApiPlayer().getRank().getRankType();
 		
 		if (chat != Chat.GLOBAL) {
 			if (message.startsWith("!")) {
@@ -214,9 +186,12 @@ public class EntityListener implements Listener {
 		if (chatEvent.isCancelled()) 
 			return;
 		
-		new FactionChatMessage(player)
+		RankType rank = chatEvent.getRankType();
+		
+		new FactionChatMessage(player.getName(), player)
 		.faction(faction)
 		.rank(rank)
+		.canUseColor(OnimaPerm.ONIMAAPI_COLORED_CHAT.has(player))
 		.rankClickCommand("/menu ranks")
 		.message(message)
 		.chat(chat)

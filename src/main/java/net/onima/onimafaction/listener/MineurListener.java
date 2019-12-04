@@ -20,7 +20,7 @@ public class MineurListener implements Listener {
 		
 		if (entity instanceof Player && Methods.hasGotLastDamageByPlayer((Player) entity)) {
 			Player player = (Player) entity;
-			Mineur mineur = (Mineur) FPlayer.getByPlayer(player).getArmorClass(Mineur.class);
+			Mineur mineur = (Mineur) FPlayer.getPlayer(player).getArmorClass(Mineur.class);
 			
 			if (mineur.isActivated())
 				mineur.removeInvisibility(player, true);
@@ -29,7 +29,7 @@ public class MineurListener implements Listener {
 
 	@EventHandler
 	public void onMove(PlayerMoveEvent event) {
-		((Mineur) FPlayer.getByPlayer(event.getPlayer()).getArmorClass(Mineur.class)).handleInvisibility(event);
+		((Mineur) FPlayer.getPlayer(event.getPlayer()).getArmorClass(Mineur.class)).handleInvisibility(event);
 	}
 	
 	@EventHandler

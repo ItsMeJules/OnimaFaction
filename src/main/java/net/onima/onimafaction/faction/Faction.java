@@ -2,7 +2,10 @@ package net.onima.onimafaction.faction;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
+import org.bson.Document;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
@@ -10,8 +13,10 @@ import org.bukkit.entity.Player;
 
 import com.google.common.collect.Sets;
 
-import net.onima.onimaapi.saver.SQLSaver;
-import net.onima.onimaapi.sql.api.query.QueryResult;
+import net.onima.onimaapi.OnimaAPI;
+import net.onima.onimaapi.mongo.api.result.MongoQueryResult;
+import net.onima.onimaapi.rank.RankType;
+import net.onima.onimaapi.saver.mongo.NoSQLSaver;
 import net.onima.onimaapi.utils.ConfigurationService;
 import net.onima.onimaapi.utils.Methods;
 import net.onima.onimaapi.zone.struct.Flag;
@@ -20,6 +25,7 @@ import net.onima.onimafaction.OnimaFaction;
 import net.onima.onimafaction.events.FactionClaimChangeEvent;
 import net.onima.onimafaction.events.FactionClaimChangeEvent.ClaimChangeCause;
 import net.onima.onimafaction.faction.claim.Claim;
+import net.onima.onimafaction.faction.struct.EggAdvantageType;
 import net.onima.onimafaction.faction.struct.Relation;
 import net.onima.onimafaction.faction.type.RoadFaction;
 import net.onima.onimafaction.faction.type.SafeZoneFaction;
@@ -27,7 +33,7 @@ import net.onima.onimafaction.faction.type.WarZoneFaction;
 import net.onima.onimafaction.faction.type.WildernessFaction;
 import net.onima.onimafaction.players.FPlayer;
 
-public class Faction implements FlagZone, SQLSaver<String> {
+public class Faction implements FlagZone, NoSQLSaver {
 
 	public static boolean lock;
 	protected static List<Faction> factions;
@@ -39,6 +45,7 @@ public class Faction implements FlagZone, SQLSaver<String> {
 		factions = new ArrayList<>();
 	}
 	
+	protected UUID uuid;
 	protected String name;
 	protected long created, renameCooldown;
 	protected List<Claim> claims;
@@ -46,6 +53,7 @@ public class Faction implements FlagZone, SQLSaver<String> {
 	protected boolean open, permanent;
 	
 	{
+		uuid = UUID.randomUUID();
 		created = System.currentTimeMillis();
 		claims = new ArrayList<>();
 		flags = new ArrayList<>();
@@ -56,6 +64,15 @@ public class Faction implements FlagZone, SQLSaver<String> {
 		
 		addFlag(Flag.PVP_TIMER_DENY_ENTRY);
 		save();
+	}
+	
+	/**
+	 * This method gets the faction uuid.
+	 * 
+	 * @return The faction uuid.
+	 */
+	public UUID getUUID() {
+		return uuid;
 	}
 	
 	/**
@@ -270,7 +287,7 @@ public class Faction implements FlagZone, SQLSaver<String> {
 	 * @return A relation.
 	 */
 	public Relation getRelation(CommandSender sender) {
-		return sender instanceof Player ? getRelation(FPlayer.getByPlayer((Player) sender).getFaction()) : Relation.ENEMY;
+		return sender instanceof Player ? getRelation(FPlayer.getPlayer((Player) sender).getFaction()) : Relation.ENEMY;
 	}
 	
 	/**
@@ -337,7 +354,8 @@ public class Faction implements FlagZone, SQLSaver<String> {
 		for(String flagName : flagsOnString) {
 			Flag flag = Flag.fromName(flagName);
 			
-			if(flag != null) flags.add(flag);
+			if (flag != null)
+				flags.add(flag);
 		}
 	}
 	
@@ -345,13 +363,13 @@ public class Faction implements FlagZone, SQLSaver<String> {
 	public String flagsToString() {
 		StringBuilder builder = new StringBuilder();
 		
-		if(flags.isEmpty()) {
+		if (flags.isEmpty()) {
 			builder.append("");
 			return builder.toString();
 		}
 		
-		for(Flag flag : flags)
-			builder.append(flag.getName()+";");
+		for (Flag flag : flags)
+			builder.append(flag.getName() + ";");
 		
 		return builder.toString();
 	}
@@ -386,28 +404,66 @@ public class Faction implements FlagZone, SQLSaver<String> {
 	
 	@Override
 	public boolean isSaved() {
-		return factions.contains(this);
+		return factions.contains(this) && OnimaAPI.getSavers().contains(this);
 	}
 
 	@Override
 	public void remove() {
 		factions.remove(this);
+		
+		OnimaAPI.getSavers().remove(this);
 	}
 
 	@Override
 	public void save() {
 		factions.add(this);
+		
+		OnimaAPI.getSavers().add(this);
 	}
 
 	@Override
-	public void updateDatabase() {
-		// TODO Auto-generated method stub
+	public void queryDatabase(MongoQueryResult result) {
+		Document document = result.getValue("faction", Document.class);
 		
+		uuid = UUID.fromString(document.getString("uuid"));
+		name = document.getString("name");
+		created = ((Number) document.get("created")).longValue(); //MongoDB stores it as an Integer whenever it can.
+		permanent = document.getBoolean("permanent");
+		
+		setFlags(document.getString("flags"));
+		
+		for (Document doc : document.getList("claims", Document.class)) {
+			Claim claim = new Claim(this, Methods.deserializeLocation(doc.getString("location_1"), false), Methods.deserializeLocation(doc.getString("location_2"), false));
+			
+			claim.setPrice(doc.getDouble("price"));
+			claim.setName(doc.getString("name"));
+			claim.setDeathban(doc.getBoolean("deathban"));
+			claim.setDTRLoss(doc.getBoolean("dtr_loss"));
+			claim.setPriority(doc.getInteger("priority"));
+			claim.setDeathbanMultiplier(doc.getDouble("deathban_multiplier"));
+			claim.setAccessRank(doc.getString("access_rank") == null ? null : RankType.fromString(doc.getString("access_rank")));
+			
+			for (Document eggDoc : doc.getList("eggs", Document.class)) {
+				EggAdvantage eggAdvantage = new EggAdvantage(EggAdvantageType.valueOf(eggDoc.getString("type")), this);
+				
+				for (String locs : eggDoc.getList("locations", String.class)) {
+					String[] str = locs.split("@");
+					
+					eggAdvantage.getLocations().put(Methods.deserializeLocation(str[0], false), Methods.deserializeLocation(str[1], false));
+				}
+				
+				claim.getEggAdvantages().add(eggAdvantage);
+			}
+		}
 	}
 	
 	@Override
-	public void queryDatabase(QueryResult<String> result) {
-		
+	public Document getDocument(Object... objects) {
+		return new Document("uuid", uuid.toString())
+				.append("name", name).append("created", created)
+				.append("open", open).append("permanent", permanent)
+				.append("flags", flagsToString())
+				.append("claims", claims.stream().map(Claim::getDocument).collect(Collectors.toCollection(() -> new ArrayList<>(claims.size()))));
 	}
 	
 	public static Faction getFaction(String name) {

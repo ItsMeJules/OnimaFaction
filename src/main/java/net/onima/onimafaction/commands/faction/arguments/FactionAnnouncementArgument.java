@@ -35,7 +35,7 @@ public class FactionAnnouncementArgument extends FactionArgument {
 			return false;
 		
 		Player player = (Player) sender;
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
+		FPlayer fPlayer = FPlayer.getPlayer(player);
 		PlayerFaction faction = null;
 		
 		if ((faction = fPlayer.getFaction()) == null) {
@@ -71,11 +71,11 @@ public class FactionAnnouncementArgument extends FactionArgument {
 		faction.setAnnouncement(announcement);
 		
 		if (announcement == null) {
-			faction.broadcast(new JSONMessage("§d§o" + fPlayer.getRole().getRole() + player.getName() + " §7a supprimé l'motd de la faction.", "§aCliquez pour changer l'motd.", true, "/f motd ", ClickEvent.Action.SUGGEST_COMMAND));
+			faction.broadcast(new JSONMessage("§d§o" + fPlayer.getRole().getRole() + fPlayer.getApiPlayer().getName() + " §7a supprimé l'motd de la faction.", "§aCliquez pour changer l'motd.", true, "/f motd ", ClickEvent.Action.SUGGEST_COMMAND));
 			return true;
 		}
 		
-		faction.broadcast(new JSONMessage("§d§o" + fPlayer.getRole().getRole() + player.getName() + " §7a modifié l'motd de la faction (§e" + oldAnnouncement + "§7) par §e" + announcement + "§7.", "§aCliquez pour changer l'motd.", true, "/f motd ", ClickEvent.Action.SUGGEST_COMMAND));
+		faction.broadcast(new JSONMessage("§d§o" + fPlayer.getRole().getRole() + fPlayer.getApiPlayer().getName() + " §7a modifié l'motd de la faction (§e" + oldAnnouncement + "§7) par §e" + announcement + "§7.", "§aCliquez pour changer l'motd.", true, "/f motd ", ClickEvent.Action.SUGGEST_COMMAND));
 		return true;
 	}
 	

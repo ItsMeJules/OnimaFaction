@@ -33,7 +33,7 @@ public class FactionDeinviteArgument extends FactionArgument {
 			return false;
 		
 		Player player = (Player) sender;
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
+		FPlayer fPlayer = FPlayer.getPlayer(player);
 		PlayerFaction faction = null;
 		
 		if ((faction = fPlayer.getFaction()) == null) {
@@ -48,7 +48,7 @@ public class FactionDeinviteArgument extends FactionArgument {
 		
 		if (args[1].equalsIgnoreCase("all")) {
 			faction.getInvitedPlayers().clear();
-			faction.broadcast("§d§o" + player.getName() + " §7a supprimé toutes les invitations à rejoindre la faction !");
+			faction.broadcast("§d§o" + fPlayer.getApiPlayer().getName() + " §7a supprimé toutes les invitations à rejoindre la faction !");
 			return true;
 		}
 		
@@ -57,15 +57,14 @@ public class FactionDeinviteArgument extends FactionArgument {
 			return false;
 		}
 		
-		faction.broadcast(new JSONMessage("§d§o" + fPlayer.getRole().getRole() + player.getName() + " §7a désinvité §d§o" + args[1] + " §7de la faction.", "§a/f invite " + args[1], true, "/f invite " + args[1]));
+		faction.broadcast(new JSONMessage("§d§o" + fPlayer.getRole().getRole() + fPlayer.getApiPlayer().getName() + " §7a désinvité §d§o" + args[1] + " §7de la faction.", "§a/f invite " + args[1], true, "/f invite " + args[1]));
 		return true;
 	}
 	
 	@Override
 	public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args) {
 		if (!checks(sender, args, 2, false) || args.length == 2) {
-			Player player = (Player) sender;
-			FPlayer fPlayer = FPlayer.getByPlayer(player);
+			FPlayer fPlayer = FPlayer.getPlayer((Player) sender);
 			PlayerFaction faction = null;
 			
 			if ((faction = fPlayer.getFaction()) != null) {

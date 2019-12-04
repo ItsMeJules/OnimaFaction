@@ -7,11 +7,13 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
+import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -19,10 +21,15 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import com.google.common.collect.Maps;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Projections;
 
 import net.md_5.bungee.api.chat.BaseComponent;
-import net.onima.onimaapi.players.OfflineAPIPlayer;
-import net.onima.onimaapi.sql.api.query.QueryResult;
+import net.onima.onimaapi.caching.UUIDCache;
+import net.onima.onimaapi.mongo.OnimaMongo;
+import net.onima.onimaapi.mongo.OnimaMongo.OnimaCollection;
+import net.onima.onimaapi.mongo.api.result.MongoQueryResult;
+import net.onima.onimaapi.rank.RankType;
 import net.onima.onimaapi.utils.ConfigurationService;
 import net.onima.onimaapi.utils.JSONMessage;
 import net.onima.onimaapi.utils.Methods;
@@ -33,8 +40,10 @@ import net.onima.onimafaction.events.FactionDTRChangeEvent.DTRChangeCause;
 import net.onima.onimafaction.events.FactionDisbandEvent;
 import net.onima.onimafaction.events.FactionPlayerLeaveEvent;
 import net.onima.onimafaction.events.FactionPlayerLeaveEvent.LeaveReason;
+import net.onima.onimafaction.faction.claim.Claim;
 import net.onima.onimafaction.faction.struct.Chat;
 import net.onima.onimafaction.faction.struct.DTRStatus;
+import net.onima.onimafaction.faction.struct.EggAdvantageType;
 import net.onima.onimafaction.faction.struct.Relation;
 import net.onima.onimafaction.faction.struct.Role;
 import net.onima.onimafaction.players.Deathban;
@@ -43,13 +52,14 @@ import net.onima.onimafaction.players.OfflineFPlayer;
 
 public class PlayerFaction extends Faction {
 	
-	private static Map<UUID, PlayerFaction> playersFaction;
+	private static Map<String, PlayerFaction> playersFaction;
+	private static Map<UUID, Deathban> notRegisteredPlayersDeathbans;
 	
 	static {
 		playersFaction = new HashMap<>();
 	}
 
-	private List<UUID> members;
+	private Map<UUID, Role> members;
 	private List<String> invitedPlayers;
 	private float DTR;
 	private Location home;
@@ -59,37 +69,45 @@ public class PlayerFaction extends Faction {
 	private OfflinePlayer focused;
 	private int dtrUpdateTime;
 	private String announcement;
+	private List<EggAdvantage> eggAdvantages;
 	
 	{
-		members = new ArrayList<>();
+		members = new HashMap<>();
 		invitedPlayers = new ArrayList<>();
 		requestedRelations = new HashMap<>();
 		regenCooldown = -1;
 		relations = new HashMap<>();
 		dtrUpdateTime = ConfigurationService.DTR_UPDATE_TIME;
+		eggAdvantages = new ArrayList<>(EggAdvantageType.values().length);
+		
+		for (EggAdvantageType eggAdvantageType : EggAdvantageType.values())
+			eggAdvantages.add(new EggAdvantage(eggAdvantageType, this));
 	}
 
 	public PlayerFaction(String name, OfflineFPlayer leader) {
 		super(name);
-		leader.setFaction(this);
-		leader.setRole(Role.LEADER);
-		members.add(leader.getOfflineApiPlayer().getUUID());
+		
+		if (leader != null) {
+			leader.setFaction(this);
+			leader.setRole(Role.LEADER);
+			members.put(leader.getOfflineApiPlayer().getUUID(), leader.getRole());
+		}
+		
 		DTR = getMaxDTR();
+		playersFaction.put(name, this);
 	}
 	
 	public PlayerFaction(String name) {
 		this(name, null);
 	}
 	
-	private String getMemberColor(OfflineFPlayer offlinePlayer, CommandSender sender) {
-		Deathban deathBan = offlinePlayer.getDeathban();
-		
-		if (offlinePlayer.getOfflineApiPlayer().isOnline()) {
-			if (sender instanceof Player && !((Player) sender).canSee(((FPlayer) offlinePlayer).getApiPlayer().toPlayer()))
+	private String getMemberColor(OfflinePlayer offlinePlayer, CommandSender sender, Deathban deathban) {
+		if (offlinePlayer.isOnline()) {
+			if (sender instanceof Player && !((Player) sender).canSee((Player) offlinePlayer))
 				return "§7";
 			else
 				return "§a";
-		} else if (deathBan != null && deathBan.isActive())
+		} else if (deathban != null && deathban.isActive())
 			return "§c";
 		else
 			return "§7";
@@ -97,34 +115,40 @@ public class PlayerFaction extends Faction {
 	
 	@Override
 	public void sendShow(CommandSender sender) {
-		OfflineFPlayer leader = getLeader();
+		OfflinePlayer leader = getLeader();
 		Player player = sender instanceof Player ? ((Player) sender) : null;
 		List<String> coLeaders = new ArrayList<>();
 		List<String> officers = new ArrayList<>();
 		List<String> members = new ArrayList<>();
+		EggAdvantage fDtrEgg = getEggAdvantage(EggAdvantageType.F_DTR);
 		
-		for (OfflineFPlayer coLeader : getColeaders())
-			coLeaders.add(getMemberColor(coLeader, sender) + coLeader.getOfflineApiPlayer().getName() + "§e[§a" + coLeader.getOfflineApiPlayer().getKills() + "§e]");
-
-		for (OfflineFPlayer officer : getOfficers())
-			officers.add(getMemberColor(officer, sender) + officer.getOfflineApiPlayer().getName() + "§e[§a" + officer.getOfflineApiPlayer().getKills() + "§e]");
+		for (OfflinePlayer coLeader : getColeaders())
+			coLeaders.add(getMemberColor(coLeader, sender, Deathban.getFor(coLeader.getUniqueId())) + Methods.getRealName(coLeader) + "§e[§a" + Methods.getKills(coLeader.getUniqueId()) + "§e]");
 		
-		for (OfflineFPlayer member : this.members.parallelStream().map(OfflineFPlayer::getByUuid).filter(member -> member.getRole() == Role.MEMBER).collect(Collectors.toCollection(() -> new ArrayList<>(this.members.size() - (coLeaders.size() + officers.size())))))
-			members.add(getMemberColor(member, sender) + member.getOfflineApiPlayer().getName() + "§e[§a" + member.getOfflineApiPlayer().getKills() + "§e]");
+		for (OfflinePlayer officer : getOfficers())
+			officers.add(getMemberColor(officer, sender, Deathban.getFor(officer.getUniqueId())) + Methods.getRealName(officer) + "§e[§a" + Methods.getKills(officer.getUniqueId()) + "§e]");
+			
+		this.members.forEach((uuid, role) -> {
+			if (role == Role.MEMBER) {
+				OfflinePlayer member = Bukkit.getOfflinePlayer(uuid);
+				
+				members.add(getMemberColor(member, sender, Deathban.getFor(uuid)) + Methods.getRealName(member) + "§e[§a" + Methods.getKills(uuid) + "§e]");	
+			}
+		});
 		
 		sender.sendMessage(ConfigurationService.STAIGHT_LINE);
 		sender.sendMessage(getDisplayName(sender) + " §7[" + getOnlineMembers(player).size() + '/' + getMembers().size() + " Connecté] §7- §eHome : §7" + (home == null ? "Aucun" : home.getBlockX() + " | " + home.getBlockZ()) + (open ? " §a[Ouverte]" : " §8[Fermée]"));
 		if (permanent) sender.sendMessage(" §aCette faction est permanente.");
 		sender.sendMessage(" §eCréée le : " + Methods.toFormatDate(created, ConfigurationService.DATE_FORMAT_HOURS));
-		sender.sendMessage(" §eLeader : " + getMemberColor(leader, sender) + leader.getOfflineApiPlayer().getName() + "§e[§a" + leader.getOfflineApiPlayer().getKills() + "§e]");
-		if (!coLeaders.isEmpty()) sender.sendMessage(" §eCo-Leader" + (coLeaders.size() > 1 ? 's' : "") + " : " + StringUtils.join(coLeaders, "§7,"));
-		if (!officers.isEmpty()) sender.sendMessage(" §eOfficier" + (officers.size() > 1 ? 's' : "") + " : " + StringUtils.join(officers, "§7,"));
-		if (!members.isEmpty()) sender.sendMessage(" §eMembre" + (members.size() > 1 ? 's' : "") + " : " + StringUtils.join(members, "§7,"));
+		if (leader != null) sender.sendMessage(" §eLeader : " + getMemberColor(leader, sender, Deathban.getFor(leader.getUniqueId())) + Methods.getRealName(leader) + "§e[§a" + Methods.getKills(leader.getUniqueId()) + "§e]");
+		if (!coLeaders.isEmpty()) sender.sendMessage(" §eCo-Leader" + (coLeaders.size() > 1 ? 's' : "") + " : " + StringUtils.join(coLeaders, "§7, "));
+		if (!officers.isEmpty()) sender.sendMessage(" §eOfficier" + (officers.size() > 1 ? 's' : "") + " : " + StringUtils.join(officers, "§7, "));
+		if (!members.isEmpty()) sender.sendMessage(" §eMembre" + (members.size() > 1 ? 's' : "") + " : " + StringUtils.join(members, "§7, "));
 		sender.sendMessage(" §eBalance : §7" + Methods.round("0.0", money)+ ' ' + ConfigurationService.MONEY_SYMBOL + "§e | §6Kills : §a" + getTotalFactionKills());
-		sender.sendMessage(" §eDTR : " + getDTRColour() + Methods.round("0.00", DTR) + getDTRStatut().getSymbol() + "§7/" + getMaxDTR());
+		sender.sendMessage(" §eDTR : " + getDTRColour() + Methods.round("0.00", DTR) + getDTRStatut().getSymbol() + "§7/" + getMaxDTR() + (fDtrEgg.getAmount() > 0 ? " §7[§c+" + fDtrEgg.getAmount() * fDtrEgg.getType().getChanger() + "§7]" : ""));
 		if (regenCooldown > 0) sender.sendMessage("§eDTR Freeze : §c" + LongTime.setYMDWHMSFormat(regenCooldown));
 		if (player != null) {
-			PlayerFaction faction = FPlayer.getByPlayer(player).getFaction();
+			PlayerFaction faction = FPlayer.getPlayer(player).getFaction();
 			if (faction != null && faction.equals(this) && announcement != null) 
 				sender.sendMessage(" §eAnnonce : §d" + announcement);
 		}
@@ -147,11 +171,15 @@ public class PlayerFaction extends Faction {
 				);
 	}
 	
-	public List<UUID> getMembers() {
+	public Map<UUID, Role> getMembers() {
 		return members;
 	}
+	
+	public Set<UUID> getMembersUUID() {
+		return members.keySet();
+	}
 
-	public void setMembers(List<UUID> members) {
+	public void setMembers(Map<UUID, Role> members) {
 		this.members = members;
 	}
 	
@@ -159,7 +187,7 @@ public class PlayerFaction extends Faction {
 		if (offlinePlayer == null) return false;
 		
 		
-		if (members.add(offlinePlayer.getOfflineApiPlayer().getUUID())) {
+		if (members.put(offlinePlayer.getOfflineApiPlayer().getUUID(), role) == null) {
 			offlinePlayer.setFaction(this);
 			offlinePlayer.setRole(role == null ? Role.MEMBER : role);
 			
@@ -182,27 +210,26 @@ public class PlayerFaction extends Faction {
 		offlinePlayer.setFaction(null);
 		offlinePlayer.setRole(Role.NO_ROLE);
 		
-		return members.remove(offlinePlayer.getOfflineApiPlayer().getUUID());
+		return members.remove(offlinePlayer.getOfflineApiPlayer().getUUID()) != null;
 	}
 
-	public OfflineFPlayer getMember(String name) {
-		for (UUID uuid : members) {
-			OfflineFPlayer offline = OfflineFPlayer.getByUuid(uuid);
-			
-			if (offline.getOfflineApiPlayer().getName().equalsIgnoreCase(name))
-				return offline;
-		}
-		return null;
+	public OfflinePlayer getMember(String name) {
+		UUID uuid = UUIDCache.getUUID(name);
+		
+		if (members.containsKey(uuid))
+			return Bukkit.getOfflinePlayer(uuid);
+		else
+			return null;
 	}
 	
 	public Collection<FPlayer> getOnlineMembers(Player player) {
 		Set<FPlayer> onlineMembers = new HashSet<>();
 		
-		for (UUID uuid : members) {
-			OfflineFPlayer offline = OfflineFPlayer.getByUuid(uuid);
+		for (UUID uuid : members.keySet()) {
+			OfflinePlayer offline = Bukkit.getOfflinePlayer(uuid);
 			
-			if (offline.getOfflineApiPlayer().isOnline()) {
-				FPlayer fPlayer = (FPlayer) offline;
+			if (offline.isOnline()) {
+				FPlayer fPlayer = FPlayer.getPlayer((Player) offline);
 				if (player != null && !player.canSee(fPlayer.getApiPlayer().toPlayer()))
 					continue;
 				else
@@ -212,20 +239,34 @@ public class PlayerFaction extends Faction {
 		return onlineMembers;
 	}
 	
-	public Set<OfflineFPlayer> getOfficers() {
-		return members.parallelStream().map(OfflineFPlayer::getByUuid).filter(offlinePlayer -> offlinePlayer.getRole() == Role.OFFICER).collect(Collectors.toSet());
+	public Set<OfflinePlayer> getOfficers() {
+		Set<OfflinePlayer> officers = new HashSet<>(5);
+		
+		members.forEach((uuid, role) -> {
+			if (role == Role.OFFICER)
+				officers.add(Bukkit.getOfflinePlayer(uuid));
+		});
+		
+		return officers;
 	}
 	
-	public OfflineFPlayer getLeader() {
-		for (UUID uuid : members) {
-			if (OfflineFPlayer.getByUuid(uuid).getRole() == Role.LEADER)
-				return OfflineFPlayer.getByUuid(uuid);
+	public OfflinePlayer getLeader() {
+		for (Entry<UUID, Role> entry : members.entrySet()) {
+			if (entry.getValue() == Role.LEADER)
+				return Bukkit.getPlayer(entry.getKey());
 		}
 		return null;
 	}
 	
-	public Set<OfflineFPlayer> getColeaders() {
-		return members.parallelStream().map(OfflineFPlayer::getByUuid).filter(offlinePlayer -> offlinePlayer.getRole() == Role.COLEADER).collect(Collectors.toSet());
+	public Set<OfflinePlayer> getColeaders() {
+		Set<OfflinePlayer> coLeaders = new HashSet<>(3);
+		
+		members.forEach((uuid, role) -> {
+			if (role == Role.COLEADER)
+				coLeaders.add(Bukkit.getOfflinePlayer(uuid));
+		});
+		
+		return coLeaders;
 	}
 
 	public List<String> getInvitedPlayers() {
@@ -240,14 +281,14 @@ public class PlayerFaction extends Faction {
 		return DTR;
 	}
 
-	public void setDTR(float DTR, DTRChangeCause cause) {
+	public boolean setDTR(float DTR, DTRChangeCause cause) {
 		DTR = Math.min(DTR, getMaxDTR());
 		
 		if (Math.abs(DTR - this.DTR) != 0) {
 			FactionDTRChangeEvent event = new FactionDTRChangeEvent(this, cause, this.DTR, DTR);
 			Bukkit.getPluginManager().callEvent(event);
 			
-			if (event.isCancelled()) return;
+			if (event.isCancelled()) return false;
 			
 			DTR = event.getNewDTR();
 			
@@ -255,13 +296,24 @@ public class PlayerFaction extends Faction {
 			else if (ConfigurationService.MAX_DTR < DTR) this.DTR = ConfigurationService.MAX_DTR;
 			else this.DTR = Float.valueOf(Methods.round("0.00", DTR));
 		}
+		
+		return true;
 	}
 	
 	public float getMaxDTR() {
-		if (members.size() == 1)
-			return ConfigurationService.SOLO_DTR;
+		float maxDTR = 0;
 		
-		return (float) Math.min(ConfigurationService.MAX_DTR, Double.valueOf(Methods.round("0.00", members.size() * ConfigurationService.PLAYER_DTR)));
+		if (members.size() == 1)
+			maxDTR = ConfigurationService.SOLO_DTR;
+		else
+			maxDTR = (float) Math.min(ConfigurationService.MAX_DTR, Double.valueOf(Methods.round("0.00", members.size() * ConfigurationService.PLAYER_DTR)));
+		
+		EggAdvantage egg = getEggAdvantage(EggAdvantageType.F_DTR);
+		
+		if (egg.getAmount() > 0)
+			maxDTR += egg.getAmount() * egg.getType().getChanger();
+		
+		return maxDTR;
 	}
 
 	public DTRStatus getDTRStatut() {
@@ -390,9 +442,9 @@ public class PlayerFaction extends Faction {
 	public int getTotalFactionKills() {
 		int kills = 0;
 		
-		for (UUID uuid : members)
-			kills += OfflineAPIPlayer.getByUuid(uuid).getKills();
-
+		for (UUID uuid : members.keySet())
+			kills += Methods.getKills(uuid);
+		
 		return kills;
 	}
 	
@@ -429,18 +481,19 @@ public class PlayerFaction extends Faction {
 			}
 		});
 		
-		Iterator<UUID> iterator = members.iterator();
+		Iterator<UUID> iterator = members.keySet().iterator();
 		
 		while (iterator.hasNext()) {
-			OfflineFPlayer offlinePlayer = OfflineFPlayer.getByUuid(iterator.next());
-			FactionPlayerLeaveEvent leaveEvent = new FactionPlayerLeaveEvent(offlinePlayer, this, LeaveReason.DISBAND, player);
-			Bukkit.getPluginManager().callEvent(leaveEvent);
-			
-			if (leaveEvent.isCancelled()) continue;
-			
-			offlinePlayer.setFaction(null);
-			offlinePlayer.setRole(Role.NO_ROLE);
-			offlinePlayer.setChat(Chat.GLOBAL);
+			OfflineFPlayer.getPlayer(iterator.next(), offlinePlayer -> {
+				FactionPlayerLeaveEvent leaveEvent = new FactionPlayerLeaveEvent(offlinePlayer, this, LeaveReason.DISBAND, player);
+				Bukkit.getPluginManager().callEvent(leaveEvent);
+				
+				if (!leaveEvent.isCancelled()) {
+					offlinePlayer.setFaction(null);
+					offlinePlayer.setRole(Role.NO_ROLE);
+					offlinePlayer.setChat(Chat.GLOBAL);
+				}
+			});
 		}
 	}
 	
@@ -463,12 +516,109 @@ public class PlayerFaction extends Faction {
 		return count;
 	}
 	
-	@Override
-	public void queryDatabase(QueryResult<String> queryResult) {
+	public List<EggAdvantage> getAllEggAdvantages() {
+		return eggAdvantages;
+	}
+	
+	public EggAdvantage getEggAdvantage(EggAdvantageType type) {
+		for (EggAdvantage egg : eggAdvantages) {
+			if (egg.getType() == type)
+				return egg;
+		}
+		
+		return null;
 	}
 	
 	@Override
-	public void updateDatabase() {
+	public void save() {
+		super.save();
+		PlayerFaction.getPlayersFaction().put(name, this);
+	}
+	
+	@Override
+	public void remove() {
+		super.remove();
+		PlayerFaction.getPlayersFaction().remove(name);
+	}
+	
+	@Override
+	public void queryDatabase(MongoQueryResult result) {
+		Document document = result.getValue("faction", Document.class);
+		
+		//Faction part
+		uuid = UUID.fromString(document.getString("uuid"));
+		name = document.getString("name");
+		created = ((Number) document.get("created")).longValue(); //MongoDB stores it as an Integer whenever it can.
+		permanent = document.getBoolean("permanent");
+		
+		setFlags(document.getString("flags"));
+		
+		for (Document doc : document.getList("claims", Document.class)) {
+			Claim claim = new Claim(this, Methods.deserializeLocation(doc.getString("location_1"), false), Methods.deserializeLocation(doc.getString("location_2"), false));
+			
+			claim.setPrice(doc.getDouble("price"));
+			claim.setName(doc.getString("name"));
+			claim.setDeathban(doc.getBoolean("deathban"));
+			claim.setDTRLoss(doc.getBoolean("dtr_loss"));
+			claim.setPriority(doc.getInteger("priority"));
+			claim.setDeathbanMultiplier(doc.getDouble("deathban_multiplier"));
+			claim.setAccessRank(doc.getString("access_rank") == null ? null : RankType.fromString(doc.getString("access_rank")));
+			
+			for (Document eggDoc : doc.getList("eggs", Document.class)) {
+				EggAdvantage eggAdvantage = new EggAdvantage(EggAdvantageType.valueOf(eggDoc.getString("type")), this);
+				
+				for (String locs : eggDoc.getList("locations", String.class)) {
+					String[] str = locs.split("@");
+					
+					eggAdvantage.getLocations().put(Methods.deserializeLocation(str[0], false), Methods.deserializeLocation(str[1], false));
+				}
+				
+				claim.getEggAdvantages().add(eggAdvantage);
+			}
+		}
+		
+		//PlayerFaction part
+		for (Document doc : document.getList("members", Document.class))
+			members.put(UUID.fromString(doc.getString("uuid")), Role.fromString(doc.getString("role")));
+		
+		invitedPlayers = document.getList("invited_players", String.class);
+		DTR = ((Number) document.get("dtr")).floatValue(); //I have to because mongo doesn't know about floats.
+		home = document.getString("home").isEmpty() ? null : Methods.deserializeLocation(document.getString("home"), false);
+		money = document.getDouble("money");
+		regenCooldown = ((Number) document.get("regen_cooldown")).longValue();
+		
+		for (Document doc : document.getList("requested_relations", Document.class))
+			requestedRelations.put(doc.getString("faction_name"), Relation.valueOf(doc.getString("relation")));
+		
+		for (Document doc : document.getList("relations", Document.class))
+			relations.put(doc.getString("faction_name"), Relation.valueOf(doc.getString("relation")));
+		
+		dtrUpdateTime = document.getInteger("dtr_update_time");
+		announcement = document.getString("announcement");
+	}
+	
+	@Override
+	public Document getDocument(Object... objects) {
+		List<Document> membersDoc = new ArrayList<>();
+		List<Document> requestedRelationsDoc = new ArrayList<>();
+		List<Document> relationsDoc = new ArrayList<>();
+		
+		for (Entry<UUID, Role> entry : members.entrySet())
+			membersDoc.add(new Document("uuid", entry.getKey().toString()).append("role", entry.getValue().name()));
+		
+		for (Entry<String, Relation> entry : requestedRelations.entrySet())
+			requestedRelationsDoc.add(new Document("faction_name", entry.getKey()).append("relation", entry.getValue().name()));
+		
+		for (Entry<String, Relation> entry : relations.entrySet())
+			requestedRelationsDoc.add(new Document("faction_name", entry.getKey()).append("relation", entry.getValue().name()));
+		
+		return super.getDocument().append("members", membersDoc)
+				.append("invited_players", invitedPlayers).append("dtr", DTR)
+				.append("home", Methods.serializeLocation(home, false))
+				.append("money", money).append("regen_cooldown", regenCooldown)
+				.append("requested_relations", requestedRelationsDoc)
+				.append("relations", relationsDoc).append("focused", focused == null ? null : focused.getUniqueId().toString())
+				.append("dtr_update_time", dtrUpdateTime).append("announcement", announcement);
 	}
 	
 	public static Map<PlayerFaction, Integer> getByMostPlayersOnline() {
@@ -485,8 +635,32 @@ public class PlayerFaction extends Faction {
 		return Methods.sortMapByValue(factions);
 	}
 
-	public static Map<UUID, PlayerFaction> getPlayersFaction() {
+	public static Map<String, PlayerFaction> getPlayersFaction() {
 		return playersFaction;
+	}
+	
+	public static Map<UUID, Deathban> getNotRegisteredPlayersDeathban() {
+		return notRegisteredPlayersDeathbans;
+	}
+	
+	public static void loadDeathbans() {
+		Bson proj = Projections.include("uuid", "deathban.killer_uuid", "deathban.location", "deathban.message", "deathban.expire_time", "deathban.death_time");
+		Iterator<Document> iterator = OnimaMongo.get(OnimaCollection.PLAYERS)
+				.find(Filters.and(
+						Filters.ne("deathban", null),
+						Filters.gt("deathban.expire_time", System.currentTimeMillis()))).projection(proj).iterator();
+		
+		while (iterator.hasNext()) {
+			Document document = iterator.next();
+			Document deathbanDocument = document.get("deathban", Document.class);
+			Deathban deathban = new Deathban(UUID.fromString(document.getString("uuid")),
+					UUID.fromString(deathbanDocument.getString("killer_uuid")),
+					Methods.deserializeLocation(deathbanDocument.getString("location"), false),
+					0L,
+					deathbanDocument.getString("message"));
+			
+			notRegisteredPlayersDeathbans.put(deathban.getPlayer(), deathban);
+		}
 	}
 
 }

@@ -6,6 +6,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import net.md_5.bungee.api.chat.ClickEvent;
+import net.onima.onimaapi.players.APIPlayer;
 import net.onima.onimaapi.rank.OnimaPerm;
 import net.onima.onimaapi.utils.JSONMessage;
 import net.onima.onimafaction.OnimaFaction;
@@ -32,7 +33,7 @@ public class FactionDisbandArgument extends FactionArgument {
 		Player player = (Player) sender;
 		PlayerFaction faction = null;
 		
-		if ((faction = FPlayer.getByPlayer(player).getFaction()) == null) {
+		if ((faction = FPlayer.getPlayer(player).getFaction()) == null) {
 			player.spigot().sendMessage(new JSONMessage("§cVous avez besoin d'une faction pour pouvoir la dissoudre !", "§a/f create ", true, "/f create ", ClickEvent.Action.SUGGEST_COMMAND).build());
 			return false;
 		}
@@ -42,7 +43,7 @@ public class FactionDisbandArgument extends FactionArgument {
 			return false;
 		}
 		
-		Bukkit.broadcastMessage("§d§o" + player.getName() + " §7a dissout la faction §d§o" + faction.getName());
+		Bukkit.broadcastMessage("§d§o" + APIPlayer.getPlayer(player).getColoredName(true) + " §7a dissout la faction §d§o" + faction.getName());
 		faction.disband(player);
 		return true;
 	}

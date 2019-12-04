@@ -55,6 +55,12 @@ public class SafeZoneFaction extends Faction {
 		sender.sendMessage(ConfigurationService.STAIGHT_LINE);
 	}
 	
+	@Override
+	public void save() {}
+	
+	@Override
+	public void remove() {}
+	
 	public static void init() {
 		safeZone = new SafeZoneFaction();
 	}

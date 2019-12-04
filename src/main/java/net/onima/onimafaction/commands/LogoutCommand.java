@@ -5,6 +5,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import net.onima.onimaapi.OnimaAPI;
 import net.onima.onimaapi.cooldown.utils.Cooldown;
 import net.onima.onimaapi.players.APIPlayer;
 import net.onima.onimaapi.rank.OnimaPerm;
@@ -15,7 +16,7 @@ public class LogoutCommand implements CommandExecutor {
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		if (!OnimaPerm.LOGOUT_COMMAND.has(sender)) {
-			sender.sendMessage(OnimaPerm.LOGOUT_COMMAND.getMissingMessage());
+			sender.sendMessage(OnimaAPI.UNKNOWN_COMMAND);
 			return false;
 		}
 		
@@ -24,7 +25,7 @@ public class LogoutCommand implements CommandExecutor {
 			return false;
 		}
 		
-		APIPlayer apiPlayer = APIPlayer.getByPlayer((Player) sender);
+		APIPlayer apiPlayer = APIPlayer.getPlayer((Player) sender);
 		LogoutCooldown cooldown = (LogoutCooldown) Cooldown.getCooldown(LogoutCooldown.class);
 		
 		if (cooldown.getTimeLeft(apiPlayer.getUUID()) > 0L) {

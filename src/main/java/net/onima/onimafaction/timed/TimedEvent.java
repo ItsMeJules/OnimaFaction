@@ -19,20 +19,21 @@ public abstract class TimedEvent {
 	protected OSound oSoundStart, oSoundDelay, oSoundStop, oSoundCancel;
 	protected String startMessage, delayMessage, stopMessage, cancelMessage;
 	protected EventAction state;
+	protected String starterName;
 	
 	public TimedEvent(long time, long delay) {
 		this.time = time;
 		this.delay = delay;
 	}
 	
-	public abstract void start(long time, long delay);
+	public abstract void start(long time, long delay, String starterName);
 	public abstract void stop();
 	public abstract void action(EventAction action);
 	public abstract String getDelayScoreboardLine();
 	public abstract String getRunningScoreboardLine();
 	
-	public void start() {
-		start(time, delay);
+	public void start(String starterName) {
+		start(time, delay, starterName);
 	}
 	
 	public TimedTask getTask() {

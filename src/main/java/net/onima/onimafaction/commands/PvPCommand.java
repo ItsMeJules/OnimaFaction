@@ -12,11 +12,13 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.util.StringUtil;
 
+import net.onima.onimaapi.OnimaAPI;
 import net.onima.onimaapi.cooldown.utils.Cooldown;
 import net.onima.onimaapi.players.APIPlayer;
 import net.onima.onimaapi.rank.OnimaPerm;
 import net.onima.onimaapi.utils.ConfigurationService;
 import net.onima.onimaapi.utils.JSONMessage;
+import net.onima.onimaapi.utils.Methods;
 import net.onima.onimaapi.utils.time.Time.LongTime;
 import net.onima.onimafaction.cooldowns.PvPTimerCooldown;
 
@@ -27,8 +29,8 @@ public class PvPCommand implements CommandExecutor, TabCompleter {
 	
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-		if (!OnimaPerm.ONIMAAPI_PVP_COMMAND.has(sender)) {
-			sender.sendMessage(OnimaPerm.ONIMAAPI_PVP_COMMAND.getMissingMessage());
+		if (!OnimaPerm.ONIMAFACTION_PVP_COMMAND.has(sender)) {
+			sender.sendMessage(OnimaAPI.UNKNOWN_COMMAND);
 			return false;
 		}
 		
@@ -43,7 +45,7 @@ public class PvPCommand implements CommandExecutor, TabCompleter {
 				return false;
 			}
 			
-			APIPlayer apiPlayer = APIPlayer.getByPlayer((Player) sender);
+			APIPlayer apiPlayer = APIPlayer.getPlayer((Player) sender);
 			Cooldown cooldown = Cooldown.getCooldown(PvPTimerCooldown.class);
 			
 			if (cooldown.getTimeLeft(apiPlayer.getUUID()) > 0L) {
@@ -60,7 +62,7 @@ public class PvPCommand implements CommandExecutor, TabCompleter {
 			String msg;
 			
 			if (args.length > 1) {
-				APIPlayer apiPlayer = APIPlayer.getByName(args[1]);
+				APIPlayer apiPlayer = APIPlayer.getPlayer(args[1]);
 				
 				if (apiPlayer == null) {
 					sender.sendMessage("§c" + args[0] + " n'est pas connecté !");
@@ -70,9 +72,9 @@ public class PvPCommand implements CommandExecutor, TabCompleter {
 				long timeLeft;
 				
 				if ((timeLeft = cooldown.getTimeLeft(apiPlayer.getUUID())) > 0L)
-					msg = "§d" + apiPlayer.getName() + " §7a son §cpvp timer §7pour encore §d" + LongTime.setYMDWHMSFormat(timeLeft) + "§7.";
+					msg = "§d" + Methods.getNameFromArg(apiPlayer, args[1]) + " §7a son §cpvp timer §7pour encore §d" + LongTime.setYMDWHMSFormat(timeLeft) + "§7.";
 				else
-					msg = "§d" + apiPlayer.getName() + " §7n'a pas son §cpvp timer §7d'activé.";
+					msg = "§d" + Methods.getNameFromArg(apiPlayer, args[1]) + " §7n'a pas son §cpvp timer §7d'activé.";
 					
 			} else if (sender instanceof Player) {
 				Player player = (Player) sender;

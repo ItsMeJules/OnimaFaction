@@ -3,15 +3,18 @@ package net.onima.onimafaction.faction.claim;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.bson.Document;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import net.onima.onimaapi.OnimaAPI;
+import net.onima.onimaapi.saver.mongo.MongoSerializer;
 import net.onima.onimaapi.utils.BetterItem;
 import net.onima.onimaapi.utils.ConfigurationService;
 import net.onima.onimaapi.utils.JSONMessage;
@@ -21,12 +24,14 @@ import net.onima.onimaapi.zone.Cuboid;
 import net.onima.onimaapi.zone.struct.CuboidFace;
 import net.onima.onimaapi.zone.struct.Flag;
 import net.onima.onimaapi.zone.type.Region;
+import net.onima.onimafaction.faction.EggAdvantage;
 import net.onima.onimafaction.faction.Faction;
 import net.onima.onimafaction.faction.PlayerFaction;
+import net.onima.onimafaction.faction.struct.EggAdvantageType;
 import net.onima.onimafaction.faction.type.WildernessFaction;
 import net.onima.onimafaction.players.FPlayer;
 
-public class Claim extends Region {
+public class Claim extends Region implements MongoSerializer {
 	
 	public static final ItemStack CLAIMING_WAND;
 	private static List<Claim> claims;
@@ -38,6 +43,11 @@ public class Claim extends Region {
 	
 	private Faction faction;
 	private double price;
+	private List<EggAdvantage> eggAdvantages;
+	
+	{
+		eggAdvantages = new ArrayList<>();
+	}
 	
 	public Claim(Faction faction, String creator, double price, Location location1, Location location2) {
 		super(faction.getName() + '_' + claims.size(), "lol", creator, location1, location2);
@@ -83,6 +93,19 @@ public class Claim extends Region {
 	 */
 	public void setPrice(double price) {
 		this.price = price;
+	}
+	
+	public List<EggAdvantage> getEggAdvantages() {
+		return eggAdvantages;
+	}
+	
+	public EggAdvantage getEggAdvantage(EggAdvantageType type) {
+		for (EggAdvantage egg : eggAdvantages) {
+			if (egg.getType() == type)
+				return egg;
+		}
+		
+		return null;
 	}
 	
 	@Override
@@ -147,45 +170,24 @@ public class Claim extends Region {
 	
 	@Override
 	public boolean isSaved() {
-		return claims.contains(this);
+		return claims.contains(this) && OnimaAPI.getSavers().contains(this);
 	}
 	
 	@Override
-	public void refreshFile() {
-		super.refreshFile();
-	}
-	
-	@Override
-	public void serialize() {
-		FileConfiguration config = areaSerialConfig.getConfig();
-		
-		if (!refreshed)
-			refreshFile();
-		
-		String path = "claims." + name + ".";
-			
-		config.set(path + "name", name);
-		config.set(path + "creator", creator);
-		config.set(path + "loc1", Methods.serializeLocation(location1, false));
-		config.set(path + "loc2", Methods.serializeLocation(location2, false));
-		config.set(path + "deathban", deathban);
-		config.set(path + "dtr-loss", dtrLoss);
-		config.set(path + "priority", priority);
-		config.set(path + "death-ban-multiplier", deathbanMultiplier);
-		config.set(path + "permission", permission == null ? "" : permission);
-		config.set(path + "created", created);
-		config.set(path + "flags", flagsToString());
-	}
-	
-	
-	@Override
-	public String toString() {
-		return Methods.serializeLocation(cuboid.getMinimumLocation(), false) + ';' + Methods.serializeLocation(cuboid.getMaximumLocation(), false) + ';' + deathban + ';' + dtrLoss + ';' + deathbanMultiplier + ';' + price + ';' + priority + '%';
+	public Document getDocument(Object... objects) {
+		return new Document("name", name).append("price", price)
+				.append("creator", creator).append("created", created)
+				.append("location_1", Methods.serializeLocation(getLocation1(), false))
+				.append("location_2", Methods.serializeLocation(getLocation2(), false))
+				.append("deathban", deathban).append("dtr_loss", dtrLoss)
+				.append("priority", priority).append("deathban_multiplier", deathbanMultiplier)
+				.append("acces_rank", accessRank == null ? null : accessRank.name())
+				.append("eggs", eggAdvantages.stream().map(EggAdvantage::getDocument).collect(Collectors.toCollection(() -> new ArrayList<>(eggAdvantages.size()))));
 	}
 	
 	public static boolean tryToBuyClaim(Player player, ClaimSelection claimSelection) {
 		World world = claimSelection.getWorld();
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
+		FPlayer fPlayer = FPlayer.getPlayer(player);
 		PlayerFaction faction = fPlayer.getFaction();
 		
 		if (faction.getClaims().size() >= ConfigurationService.MAX_CLAIMS) {
@@ -265,14 +267,14 @@ public class Claim extends Region {
 		Claim claim = null;
 		claimSelection.setPrice(price);
 		
-		if (faction.addClaim(claim = claimSelection.toClaim(faction, player.getName()), fPlayer)) {
+		if (faction.addClaim(claim = claimSelection.toClaim(faction, fPlayer.getApiPlayer().getName()), fPlayer)) {
 			claim.setCuboid(cuboid);
 			claim.setName(faction.getName() + '_' + claims.size());
 			
 			Location middle = cuboid.getCenterLocation();
 			
 			player.sendMessage("§7Claim acheté pour §e" + price + ConfigurationService.MONEY_SYMBOL + "§7.");
-			faction.broadcast(new JSONMessage("§d§o" + fPlayer.getRole().getRole() + player.getName() +" §7a claim un territoire pour la faction. Passez votre souris pour plus d'informations.",
+			faction.broadcast(new JSONMessage("§d§o" + fPlayer.getRole().getRole() + claim.getCreator() +" §7a claim un territoire pour la faction. Passez votre souris pour plus d'informations.",
 					"§e" + claim.getName() + ' ' + cuboid.getXLength() + 'x' + cuboid.getZLength() + " §7- §d§o" + middle.getBlockX() + " §c| §d§o" + middle.getBlockZ() + " §7(§e" + claim.getPrice() + ConfigurationService.MONEY_SYMBOL + "§7)"));
 			faction.removeMoney(price);
 		}

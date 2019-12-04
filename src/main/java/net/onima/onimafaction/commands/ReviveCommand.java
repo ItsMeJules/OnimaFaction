@@ -10,8 +10,10 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.util.StringUtil;
 
+import net.onima.onimaapi.OnimaAPI;
 import net.onima.onimaapi.rank.OnimaPerm;
 import net.onima.onimaapi.utils.JSONMessage;
+import net.onima.onimaapi.utils.Methods;
 import net.onima.onimafaction.players.OfflineFPlayer;
 
 public class ReviveCommand implements CommandExecutor, TabCompleter {
@@ -21,7 +23,7 @@ public class ReviveCommand implements CommandExecutor, TabCompleter {
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		if (!OnimaPerm.REVIVE_COMMAND.has(sender)) {
-			sender.sendMessage(OnimaPerm.REVIVE_COMMAND.getMissingMessage());
+			sender.sendMessage(OnimaAPI.UNKNOWN_COMMAND);
 			return false;
 		}
 		
@@ -30,19 +32,20 @@ public class ReviveCommand implements CommandExecutor, TabCompleter {
 			return false;
 		}
 		
-		OfflineFPlayer offline = OfflineFPlayer.getByName(args[0]);
+		OfflineFPlayer.getPlayer(args[0], offline -> {
+			if (offline == null) {
+				sender.sendMessage("§c" + args[0] + " ne s'est jamais connecté sur le serveur !");
+				return;
+			}
+			
+			if (offline.getDeathban() == null || !offline.getDeathban().isActive()) {
+				sender.sendMessage("§c" + Methods.getName(offline.getOfflineApiPlayer(), true) + " n'est pas deathban !");
+				return;
+			}
+			
+			offline.setDeathban(null);
+		});
 		
-		if (offline == null) {
-			sender.sendMessage("§c" + args[0] + " ne s'est jamais connecté sur le serveur !");
-			return false;
-		}
-		
-		if (offline.getDeathban() == null || !offline.getDeathban().isActive()) {
-			sender.sendMessage("§c" + offline.getOfflineApiPlayer().getName() + " n'est pas deathban !");
-			return false;
-		}
-		
-		offline.setDeathban(null);
 		return true;
 	}
 	
@@ -56,8 +59,8 @@ public class ReviveCommand implements CommandExecutor, TabCompleter {
 		for (OfflineFPlayer offline : OfflineFPlayer.getDisconnectedOfflineFPlayers()) {
 			
 			if (offline.getDeathban() != null && offline.getDeathban().isActive()) {
-				if (StringUtil.startsWithIgnoreCase(offline.getOfflineApiPlayer().getName(), args[0]))
-					completions.add(offline.getOfflineApiPlayer().getName());
+				if (StringUtil.startsWithIgnoreCase(offline.getOfflineApiPlayer().getOfflinePlayer().getName(), args[0]))
+					completions.add(offline.getOfflineApiPlayer().getOfflinePlayer().getName());
 			}
 		}
 		

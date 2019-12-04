@@ -15,7 +15,7 @@ public class PortalTrapFixListener implements Listener {
 
 	@EventHandler
 	public void onClick(PlayerInteractEvent event) {
-		if (event.getClickedBlock() == null || FPlayer.getByPlayer(event.getPlayer()).getRegionOn().hasFlag(Flag.NO_INTERACT))
+		if (event.getClickedBlock() == null || FPlayer.getPlayer(event.getPlayer()).getRegionOn().hasFlag(Flag.NO_INTERACT))
 			return;
 		
 		if (event.getClickedBlock().getType() == Material.PORTAL) {

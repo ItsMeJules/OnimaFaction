@@ -3,6 +3,7 @@ package net.onima.onimafaction.timed.event;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 
+import net.onima.onimaapi.utils.Methods;
 import net.onima.onimaapi.utils.OSound;
 import net.onima.onimafaction.events.server_event.FactionEventServerStartEvent;
 import net.onima.onimafaction.task.TimedTask;
@@ -41,7 +42,7 @@ public class SOTW extends TimedEvent implements FactionServerEvent {
 	}
 
 	@Override
-	public void start(long time, long delay) {
+	public void start(long time, long delay, String starterName) {
 		FactionEventServerStartEvent event = new FactionEventServerStartEvent(this);
 		Bukkit.getPluginManager().callEvent(event);
 		
@@ -49,6 +50,7 @@ public class SOTW extends TimedEvent implements FactionServerEvent {
 			return;
 		
 		timedTask = new TimedTask(this, time, delay);
+		super.starterName = starterName;
 		
 		timedTask.runTaskTimer(plugin, 0L, 20L);
 		runningTask = timedTask;
@@ -60,6 +62,7 @@ public class SOTW extends TimedEvent implements FactionServerEvent {
 		timedTask.cancel();
 		runningTask = null;
 		timedTask = null;
+		starterName = null;
 		plugin.setFactionServerEvent(null);
 	}
 	
@@ -73,6 +76,9 @@ public class SOTW extends TimedEvent implements FactionServerEvent {
 		case STOPPED:
 			break;
 		case CANCELLED:
+			Methods.playServerSound(oSoundCancel);
+			
+			stop();
 			break;
 		default:
 			break;

@@ -36,7 +36,7 @@ public class ClassWarmupCooldown extends Cooldown implements Listener {
 	@Override
 	public void onExpire(OfflineAPIPlayer offline) {
 		if (offline.isOnline()) {
-			FPlayer fPlayer = FPlayer.getByUuid(offline.getUUID());
+			FPlayer fPlayer = FPlayer.getPlayer(offline.getUUID());
 			ArmorClass loading = fPlayer.getLoadingClass();
 			
 			loading.setLoading(false);
@@ -50,7 +50,11 @@ public class ClassWarmupCooldown extends Cooldown implements Listener {
 	
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 	public void onArmorSet(EquipmentSetEvent event) {
-		FPlayer fPlayer = FPlayer.getByUuid(event.getHumanEntity().getUniqueId());
+		FPlayer fPlayer = FPlayer.getPlayer(event.getHumanEntity().getUniqueId());
+		
+		if (fPlayer == null) //When you load an offline player's inventory, this event triggers.
+			return;
+		
 		ArmorClass equipped = fPlayer.getEquippedClass();
 		
 		if (equipped != null) {
@@ -77,7 +81,7 @@ public class ClassWarmupCooldown extends Cooldown implements Listener {
 	
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
 	public void onQuit(PlayerQuitEvent event) {
-		FPlayer fPlayer = FPlayer.getByUuid(event.getPlayer().getUniqueId());
+		FPlayer fPlayer = FPlayer.getPlayer(event.getPlayer().getUniqueId());
 		ArmorClass armorClass = fPlayer.getEquippedClass();
 		
 		if (armorClass != null) {

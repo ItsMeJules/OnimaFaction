@@ -97,7 +97,7 @@ public class BattleRoyale extends BukkitRunnable implements FactionServerEvent {
 				runningPhase.shrink();
 				for (APIPlayer apiPlayer : APIPlayer.getOnlineAPIPlayers()) {
 					
-					if (apiPlayer.getRank().getRankType().hasPermission(OnimaPerm.WORLD_BORDER_BYPASS))
+					if (OnimaPerm.WORLD_BORDER_BYPASS.has(apiPlayer.toPlayer()))
 						continue;
 					
 					boolean inStorm = playersInStorm.contains(apiPlayer.getUUID());

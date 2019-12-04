@@ -1,10 +1,14 @@
 package net.onima.onimafaction.commands.lives.arguments;
 
+import java.util.UUID;
+
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import net.onima.onimaapi.caching.UUIDCache;
 import net.onima.onimaapi.players.APIPlayer;
+import net.onima.onimaapi.players.OfflineAPIPlayer;
 import net.onima.onimaapi.rank.OnimaPerm;
 import net.onima.onimaapi.utils.JSONMessage;
 import net.onima.onimaapi.utils.Methods;
@@ -26,43 +30,47 @@ public class LivesSendArgument extends BasicCommandArgument {
 		if (checks(sender, args, 3, true))
 			return false;
 		
-		FPlayer fPlayer = FPlayer.getByPlayer((Player) sender);
-		OfflineFPlayer offlineFPlayer = OfflineFPlayer.getByName(args[1]);
+		FPlayer fPlayer = FPlayer.getPlayer((Player) sender);
+		UUID uuid = UUIDCache.getUUID(args[1]);
 		
-		if (offlineFPlayer == null) {
+		if (uuid == null) {
 			sender.sendMessage("§c" + args[1] + " ne s'est jamais connecté sur le serveur !");
-			return false;
-		}
-
-		Integer amount = Methods.toInteger(args[2]);
-		
-		if (amount == null) {
-			sender.sendMessage("§c" + args[2] + " n'est pas un entier !");
-			return false;
+			return false;	
 		}
 		
-		amount = Math.abs(amount);
-		
-		if (amount == 0) {
-			sender.sendMessage("§cVous ne pouvez pas envoyer 0 vies !");
-			return false;
-		}
-		
-		if (fPlayer.getLives() - amount < 0) {
-			sender.sendMessage("§cVous n'avez pas assez de vie à envoyer. §7Vous en avez " + fPlayer.getLives() + ".");
-			return false;
-		} else {
-			String life = " §7vie" + (amount > 1 ? "s" : "");
+		OfflineFPlayer.getPlayer(uuid, offlineFPlayer -> {
+			Integer amount = Methods.toInteger(args[2]);
 			
-			sender.sendMessage("§dVous §7avez envoyé §d" + amount + life + " à §d" + offlineFPlayer.getOfflineApiPlayer().getName() + "§7.");
+			if (amount == null) {
+				sender.sendMessage("§c" + args[2] + " n'est pas un entier !");
+				return;
+			}
 			
-			if (offlineFPlayer.getOfflineApiPlayer().isOnline())
-				((APIPlayer) offlineFPlayer.getOfflineApiPlayer()).sendMessage("§d" + sender.getName() + " §7vous a envoyé §d" + amount + life + "§7.");
+			amount = Math.abs(amount);
 			
-			fPlayer.setLives(fPlayer.getLives() - amount);
-			offlineFPlayer.setLives(offlineFPlayer.getLives() + amount);
-			return true;
-		}
+			if (amount == 0) {
+				sender.sendMessage("§cVous ne pouvez pas envoyer 0 vies !");
+				return;
+			}
+			
+			if (fPlayer.getLives() - amount < 0) {
+				sender.sendMessage("§cVous n'avez pas assez de vie à envoyer. §7Vous en avez " + fPlayer.getLives() + ".");
+				return;
+			} else {
+				String life = " §7vie" + (amount > 1 ? "s" : "");
+				OfflineAPIPlayer offline = offlineFPlayer.getOfflineApiPlayer();
+				
+				sender.sendMessage("§dVous §7avez envoyé §d" + amount + life + " à §d" + Methods.getNameFromArg(offline, args[1]) + "§7.");
+				
+				if (offlineFPlayer.getOfflineApiPlayer().isOnline())
+					((APIPlayer) offlineFPlayer.getOfflineApiPlayer()).sendMessage("§d" + fPlayer.getApiPlayer().getName() + " §7vous a envoyé §d" + amount + life + "§7.");
+				
+				fPlayer.setLives(fPlayer.getLives() - amount);
+				offlineFPlayer.setLives(offlineFPlayer.getLives() + amount);
+			}
+		});
+		
+		return true;
 	}
 
 }

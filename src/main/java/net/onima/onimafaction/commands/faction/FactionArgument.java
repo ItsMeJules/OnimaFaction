@@ -40,7 +40,7 @@ public abstract class FactionArgument extends BasicCommandArgument {
 	
 	public boolean hasGoodRole(CommandSender sender) {
 		if (sender instanceof Player)
-			return FPlayer.getByUuid(((Player) sender).getUniqueId()).getRole().isAtLeast(role);
+			return FPlayer.getPlayer(((Player) sender).getUniqueId()).getRole().isAtLeast(role);
 		else
 			return true;
 	}

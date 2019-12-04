@@ -48,7 +48,7 @@ public class FactionGiveMoneyArgument extends FactionArgument {
 		
 		faction.addMoney(amount);
 		sender.sendMessage("§d§oVous §7avez donné §d§o" + amount + ConfigurationService.MONEY_SYMBOL + " §7à la faction §d§o" + faction.getName() + "§7.");
-		faction.broadcast("§d§o" + sender.getName() + " §7a donné §d§o" + amount + ConfigurationService.MONEY_SYMBOL + " §7à la faction.");
+		faction.broadcast("§d§o" + Methods.getRealName(sender) + " §7a donné §d§o" + amount + ConfigurationService.MONEY_SYMBOL + " §7à la faction.");
 		
 		return true;
 	}

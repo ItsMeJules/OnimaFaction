@@ -30,7 +30,7 @@ public class FactionLeaveArgument extends FactionArgument {
 			return false;
 		
 		Player player = (Player) sender;
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
+		FPlayer fPlayer = FPlayer.getPlayer(player);
 		PlayerFaction faction = null;
 		
 		if ((faction = fPlayer.getFaction()) == null) {
@@ -41,7 +41,7 @@ public class FactionLeaveArgument extends FactionArgument {
 		if (!faction.isPermanent()) {
 			if (faction.getMembers().size() == 1) {
 				faction.disband(player);
-				Bukkit.broadcastMessage("§d§o" + player.getName() + " §7a dissout la faction §d§o" + faction.getName());
+				Bukkit.broadcastMessage(fPlayer.getApiPlayer().getColoredName(true) + " §7a dissout la faction §d§o" + faction.getName());
 				return true;
 			}
 			
@@ -58,7 +58,7 @@ public class FactionLeaveArgument extends FactionArgument {
 		
 		player.sendMessage("§d§oVous §7avez quitté votre faction !");
 		faction.removeMember(fPlayer, LeaveReason.LEAVE, null);
-		faction.broadcast("§d§o" + player.getName() + " §7a quitté la faction !");
+		faction.broadcast("§d§o" + fPlayer.getApiPlayer().getName() + " §7a quitté la faction !");
 		return true;
 	}
 

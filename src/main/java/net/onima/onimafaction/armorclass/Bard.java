@@ -202,7 +202,7 @@ public class Bard extends ArmorClass {
 	}
 	
 	public static void setBardEffect(PotionEffect effect, Player player) {
-		FPlayer fPlayer = FPlayer.getByUuid(player.getUniqueId());
+		FPlayer fPlayer = FPlayer.getPlayer(player.getUniqueId());
 		Collection<String> bardingEffects = fPlayer.getEffectsFromBard();
 		PotionEffectType type = effect.getType();
 				

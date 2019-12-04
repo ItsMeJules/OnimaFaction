@@ -14,9 +14,12 @@ import org.bukkit.projectiles.ProjectileSource;
 import net.onima.onimaapi.utils.Methods;
 import net.onima.onimaapi.zone.struct.Flag;
 import net.onima.onimaapi.zone.type.Region;
+import net.onima.onimafaction.events.FactionDTRChangeEvent;
 import net.onima.onimafaction.faction.PlayerFaction;
 import net.onima.onimafaction.faction.claim.Claim;
+import net.onima.onimafaction.faction.struct.DTRStatus;
 import net.onima.onimafaction.players.FPlayer;
+import net.onima.onimafaction.task.RegenerationEntryTask;
 
 public class ProtectionListener implements Listener {
 	
@@ -29,7 +32,7 @@ public class ProtectionListener implements Listener {
 			if (event instanceof EntityDamageByEntityEvent) {
 				Player attacker = Methods.getLastAttacker((EntityDamageByEntityEvent) event);
 				
-				if (attacker != null && !attacker.equals(entity) && FPlayer.getByPlayer(attacker).hasFactionBypass())
+				if (attacker != null && !attacker.equals(entity) && FPlayer.getPlayer(attacker).hasFactionBypass())
 					return;
 			}
 			
@@ -62,15 +65,25 @@ public class ProtectionListener implements Listener {
 		
 		if (shooter instanceof Player) {
 			Player player = (Player) shooter;
-			PlayerFaction faction = FPlayer.getByPlayer(player).getFaction();
+			PlayerFaction faction = FPlayer.getPlayer(player).getFaction();
 			
 			for (LivingEntity affected : event.getAffectedEntities()) {
 				if (!player.equals(affected) && affected instanceof Player) {
-					if (Claim.getClaimAndRegionAt(affected.getLocation()).hasFlag(Flag.COMBAT_SAFE) || (faction != null && faction.getMembers().contains(affected.getUniqueId())))
+					if (Claim.getClaimAndRegionAt(affected.getLocation()).hasFlag(Flag.COMBAT_SAFE) || (faction != null && faction.getMembers().containsKey(affected.getUniqueId())))
 						event.setCancelled(true);
 				}
 			}
 		}
+	}
+	
+	@EventHandler
+	public void onDTRChange(FactionDTRChangeEvent event) {
+		PlayerFaction faction = (PlayerFaction) event.getFaction();
+		
+		if (faction.getDTRStatut() == DTRStatus.REGENERATING)
+			RegenerationEntryTask.get().insert(faction);
+		else
+			RegenerationEntryTask.get().remove(faction);
 	}
 	
 }

@@ -2,7 +2,7 @@ package net.onima.onimafaction.events;
 
 import org.bukkit.event.Cancellable;
 
-import net.onima.onimafaction.faction.Faction;
+import net.onima.onimafaction.faction.PlayerFaction;
 
 public class FactionDTRChangeEvent extends FactionEvent implements Cancellable {
 	
@@ -10,7 +10,7 @@ public class FactionDTRChangeEvent extends FactionEvent implements Cancellable {
 	private float oldDTR, newDTR;
 	private boolean cancel;
 
-	public FactionDTRChangeEvent(Faction faction, DTRChangeCause cause, float oldDTR, float newDTR) {
+	public FactionDTRChangeEvent(PlayerFaction faction, DTRChangeCause cause, float oldDTR, float newDTR) {
 		super(faction);
 		
 		this.cause = cause;

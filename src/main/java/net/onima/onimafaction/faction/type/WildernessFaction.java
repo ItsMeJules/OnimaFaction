@@ -3,6 +3,7 @@ package net.onima.onimafaction.faction.type;
 import org.bukkit.command.CommandSender;
 
 import net.onima.onimaapi.utils.ConfigurationService;
+import net.onima.onimaapi.zone.struct.Flag;
 import net.onima.onimafaction.faction.Faction;
 import net.onima.onimafaction.faction.claim.WildernessClaim;
 
@@ -13,7 +14,8 @@ public class WildernessFaction extends Faction {
 	
 	public WildernessFaction() {
 		super("Nature");
-		setFlags(null, null);
+		
+		setFlags(new Flag[0]);
 	}
 	
 	@Override
@@ -27,6 +29,12 @@ public class WildernessFaction extends Faction {
 		sender.sendMessage(' ' + getDisplayName(sender));
 		sender.sendMessage(ConfigurationService.STAIGHT_LINE);
 	}
+	
+	@Override
+	public void save() {}
+	
+	@Override
+	public void remove() {}
 	
 	public static void init() {
 		wilderness = new WildernessFaction();

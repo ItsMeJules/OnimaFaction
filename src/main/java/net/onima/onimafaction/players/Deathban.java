@@ -4,19 +4,23 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.bson.Document;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 
 import net.onima.onimaapi.players.APIPlayer;
 import net.onima.onimaapi.players.OfflineAPIPlayer;
 import net.onima.onimaapi.rank.RankType;
+import net.onima.onimaapi.saver.mongo.MongoSerializer;
 import net.onima.onimaapi.utils.ConfigurationService;
 import net.onima.onimaapi.utils.Methods;
 import net.onima.onimaapi.utils.time.Time;
 import net.onima.onimaapi.utils.time.Time.LongTime;
 import net.onima.onimafaction.OnimaFaction;
+import net.onima.onimafaction.faction.PlayerFaction;
+import net.onima.onimafaction.faction.struct.EggAdvantageType;
 
-public class Deathban {
+public class Deathban implements MongoSerializer {
 
 	private static Map<RankType, Long> banTime;
 	
@@ -73,9 +77,17 @@ public class Deathban {
 	public long getDeathTime() {
 		return death;
 	}
+	
+	public void setDeathTime(long death) {
+		this.death = death;
+	}
 
 	public long getExpireTime() {
 		return expire;
+	}
+	
+	public void setExpireTime(long expire) {
+		this.expire = expire;
 	}
 
 	public String getDeathMessage() {
@@ -94,9 +106,9 @@ public class Deathban {
 		if (expire <= System.currentTimeMillis())
 			return;
 		
-		OfflineAPIPlayer offline = OfflineAPIPlayer.getByUuid(player);
+		OfflineAPIPlayer offline = OfflineAPIPlayer.getOfflineAPIPlayers().get(player);
 		
-		if (offline.isOnline()) {
+		if (offline != null && offline.isOnline()) {
 			Bukkit.getScheduler().runTaskLater(OnimaFaction.getInstance(), () -> {
 				if (!offline.isOnline())
 					return;
@@ -107,13 +119,36 @@ public class Deathban {
 			
 	}
 	
+	@Override
+	public Document getDocument(Object... objects) {
+		return new Document("killer_uuid", killer == null ? null : killer.toString())
+				.append("location", Methods.serializeLocation(location, false)).append("death_time", death)
+				.append("expire_time", expire).append("death_message", deathMessage);
+	}
+	
 	public static long getBanTime(UUID uuid) {
-		OfflineAPIPlayer offline = OfflineAPIPlayer.getByUuid(uuid);
+		OfflineFPlayer offline = OfflineFPlayer.getOfflineFPlayers().get(uuid);
 		
 		if (offline == null)
 			return -1;
 		
-		return banTime.get(offline.getRank().getRankType());
+		long banTime = Deathban.banTime.get(offline.getOfflineApiPlayer().getRank().getRankType());
+		
+		if (offline.getFaction() != null && offline.getFaction().getEggAdvantage(EggAdvantageType.DEATHBAN).getAmount() > 0)
+			banTime = banTime * (2 / 3);
+		
+		return banTime;
+	}
+	
+	public static Deathban getFor(UUID uuid) {
+		Deathban deathban = null;
+		
+		if (OfflineFPlayer.getOfflineFPlayers().containsKey(uuid))
+			deathban = OfflineFPlayer.getOfflineFPlayers().get(uuid).getDeathban();
+		else
+			PlayerFaction.getNotRegisteredPlayersDeathban().get(uuid);
+		
+		return deathban;
 	}
 
 }

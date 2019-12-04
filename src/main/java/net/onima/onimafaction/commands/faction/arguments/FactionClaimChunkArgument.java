@@ -33,7 +33,7 @@ public class FactionClaimChunkArgument extends FactionArgument {
 			return false;
 		
 		Player player = (Player) sender;
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
+		FPlayer fPlayer = FPlayer.getPlayer(player);
 		PlayerFaction faction = null;
 		
 		if ((faction = fPlayer.getFaction()) == null) {

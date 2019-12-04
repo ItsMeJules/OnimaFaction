@@ -37,7 +37,7 @@ public class ArcherSpeedCooldown extends Cooldown implements Listener {
 				if (getTimeLeft(player.getUniqueId()) > 0L)
 					return false;
 				else {
-					APIPlayer apiPlayer = APIPlayer.getByPlayer(player);
+					APIPlayer apiPlayer = APIPlayer.getPlayer(player);
 					
 					Methods.removeOneItem(player);
 					onStart(apiPlayer);
@@ -73,7 +73,7 @@ public class ArcherSpeedCooldown extends Cooldown implements Listener {
 		if (event.getAction().toString().contains("RIGHT") && event.hasItem()) {
 			Player player = event.getPlayer();
 			
-			if (FPlayer.getByPlayer(player).getArmorClass(Archer.class).isActivated()) {
+			if (FPlayer.getPlayer(player).getArmorClass(Archer.class).isActivated()) {
 				ItemStack item = event.getItem();
 				
 				if (speedBuff.getItemStack().isSimilar(item)) {

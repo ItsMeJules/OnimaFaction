@@ -41,7 +41,7 @@ public class FactionUnallyArgument extends FactionArgument {
 			return false;
 		
 		Player player = (Player) sender;
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
+		FPlayer fPlayer = FPlayer.getPlayer(player);
 		PlayerFaction faction = null;
 		
 		if ((faction = fPlayer.getFaction()) == null) {
@@ -72,7 +72,7 @@ public class FactionUnallyArgument extends FactionArgument {
 				faction.removeRelation(ally);
 				ally.broadcast(msg);
 			}
-			faction.broadcast("§d§o" + fPlayer.getRole().getRole() + player.getName() + " §7a supprimé toutes les alliances de la faction !");
+			faction.broadcast("§d§o" + fPlayer.getRole().getRole() + fPlayer.getApiPlayer().getName() + " §7a supprimé toutes les alliances de la faction !");
 			return true;
 		}
 		
@@ -103,7 +103,7 @@ public class FactionUnallyArgument extends FactionArgument {
 		targetFaction.removeRelation(faction);
 		faction.removeRelation(targetFaction);
 		targetFaction.broadcast("§d§o" + faction.getName() + "§7 a décidé de ne plus être allié avec vous !");
-		faction.broadcast("§d§o" + fPlayer.getRole().getRole() + player.getName() + " §7a supprimé l'alliance avec §d§o" + targetFaction.getName() + "§7.");
+		faction.broadcast("§d§o" + fPlayer.getRole().getRole() + fPlayer.getApiPlayer().getName() + " §7a supprimé l'alliance avec §d§o" + targetFaction.getName() + "§7.");
 		
 		return true;
 	}
@@ -114,7 +114,7 @@ public class FactionUnallyArgument extends FactionArgument {
 			return Collections.emptyList();
 		
 		Player player = (Player) sender;
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
+		FPlayer fPlayer = FPlayer.getPlayer(player);
 		PlayerFaction faction = null;
 		
 		if ((faction = fPlayer.getFaction()) == null)

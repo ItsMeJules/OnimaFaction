@@ -14,6 +14,7 @@ import net.onima.onimaapi.items.Wand;
 import net.onima.onimaapi.rank.OnimaPerm;
 import net.onima.onimaapi.utils.ConfigurationService;
 import net.onima.onimaapi.utils.JSONMessage;
+import net.onima.onimaapi.utils.Methods;
 import net.onima.onimaapi.zone.Cuboid;
 import net.onima.onimafaction.commands.faction.FactionArgument;
 import net.onima.onimafaction.faction.Faction;
@@ -45,7 +46,7 @@ public class FactionClaimForArgument extends FactionArgument {
 			return false;
 		}
 		
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
+		FPlayer fPlayer = FPlayer.getPlayer(player);
 		Wand wand = fPlayer.getApiPlayer().getWand();
 		
 		if (!wand.hasAllLocationsSet()) {
@@ -61,14 +62,14 @@ public class FactionClaimForArgument extends FactionArgument {
 		
 		Claim claim = null;
 		
-		if (faction.addClaim(claim = new Claim(faction, player.getName(), loc1, loc2), fPlayer)) {
+		if (faction.addClaim(claim = new Claim(faction, Methods.getRealName(sender), loc1, loc2), fPlayer)) {
 			player.sendMessage("§d§oVous §7avez bien claim pour la faction §d§o" + faction.getName());
 			
 			if (faction instanceof PlayerFaction) {
 				Cuboid cuboid = claim.toCuboid();
 				Location middle = cuboid.getCenterLocation();
 				
-				((PlayerFaction) faction).broadcast(new JSONMessage("§d§o" + player.getName() +" §7a claim un territoire pour la faction. Passez votre souris pour plus d'informations.",
+				((PlayerFaction) faction).broadcast(new JSONMessage("§d§o" + claim.getCreator() +" §7a claim un territoire pour la faction. Passez votre souris pour plus d'informations.",
 						"§e" + claim.getName() + ' ' + cuboid.getXLength() + 'x' + cuboid.getZLength() + "§7- §d§o" + middle.getBlockX() + " §c| §d§o" + middle.getBlockZ() + " §7(§e" + claim.getPrice() + ConfigurationService.MONEY_SYMBOL + "§7)"));
 			}
 			return true;

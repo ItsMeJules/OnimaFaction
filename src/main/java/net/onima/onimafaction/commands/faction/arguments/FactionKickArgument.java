@@ -5,16 +5,18 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.util.StringUtil;
 
 import net.md_5.bungee.api.chat.ClickEvent;
+import net.onima.onimaapi.caching.UUIDCache;
+import net.onima.onimaapi.players.APIPlayer;
+import net.onima.onimaapi.players.OfflineAPIPlayer;
 import net.onima.onimaapi.rank.OnimaPerm;
 import net.onima.onimaapi.utils.JSONMessage;
+import net.onima.onimaapi.utils.Methods;
 import net.onima.onimafaction.OnimaFaction;
 import net.onima.onimafaction.commands.faction.FactionArgument;
 import net.onima.onimafaction.events.FactionPlayerLeaveEvent.LeaveReason;
@@ -33,17 +35,16 @@ public class FactionKickArgument extends FactionArgument {
 		role = Role.OFFICER;
 	}
 
-	@SuppressWarnings("deprecation")
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		if(checks(sender, args, 2, true))
 			return false;
 		
 		Player player = (Player) sender;
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
-		PlayerFaction faction = null;
+		FPlayer fPlayer = FPlayer.getPlayer(player);
+		PlayerFaction faction = fPlayer.getFaction();
 
-		if ((faction = fPlayer.getFaction()) == null) {
+		if (faction == null) {
 			player.spigot().sendMessage(new JSONMessage("§cVous avez besoin d'une faction pour kick des joueurs !", "§a/f create ", true, "/f create ", ClickEvent.Action.SUGGEST_COMMAND).build());
 			return false;
 		}
@@ -53,42 +54,45 @@ public class FactionKickArgument extends FactionArgument {
 			return false;
 		}
 		
-		if (player.getName().equalsIgnoreCase(args[1])) {
+		String senderName = fPlayer.getApiPlayer().getName();
+		
+		if (senderName.equalsIgnoreCase(args[1])) {
 			player.sendMessage("§cVous ne pouvez pas vous kick vous même !");
 			return false;
 		}
 		
-		OfflinePlayer kicked = Bukkit.getOfflinePlayer(args[1]);
+		UUID kickedUUID = UUIDCache.getUUID(args[1]);
 		
-		if (!kicked.hasPlayedBefore()) {
+		if (kickedUUID == null) {
 			player.sendMessage("§c" + name + " ne s'est jamais connecté sur le serveur !");
 			return false;
 		}
 		
-		OfflineFPlayer offlineFPlayer = OfflineFPlayer.getByOfflinePlayer(kicked);
+		OfflineFPlayer.getPlayer(kickedUUID, offlineFPlayer -> {
+			if (!faction.getMembers().containsKey(kickedUUID)) {
+				player.sendMessage("§c" + Methods.getNameFromArg(offlineFPlayer.getOfflineApiPlayer(), args[1]) + " n'est pas dans votre faction !");
+				return;
+			}
+			
+			Role role = offlineFPlayer.getRole();
+			Role kickerRole = fPlayer.getRole();
+			
+			if (role.getValue() >= kickerRole.getValue()) {
+				player.sendMessage("§cVous ne pouvez pas kick des " + role.getName().toLowerCase() + " de votre faction !");
+				faction.broadcast("§d§o" + kickerRole.getRole() + senderName + " §7a essayé de kick §d§o" + role.getRole() + offlineFPlayer.getOfflineApiPlayer().getName() + " §7de la faction !");
+				return;
+			}
+			
+			OfflineAPIPlayer offline = offlineFPlayer.getOfflineApiPlayer();
+			
+			if (faction.removeMember(offlineFPlayer, LeaveReason.KICK, player)) {
+				if (offline.isOnline()) 
+					((APIPlayer) offline).sendMessage("§d§o" + kickerRole.getRole() + senderName + " §7vous a kick de la faction !");
+				faction.broadcast(new JSONMessage("§d§o" + kickerRole.getRole() + senderName + " §7a kick §d§o" + offline.getName() + " §7de la faction !", "§a/f invite " + offline.getName(), true, "/f invite " + offline.getName()));
+			}
+		});
 		
-		if (!faction.getMembers().contains(kicked.getUniqueId())) {
-			player.sendMessage("§c" + kicked.getName() + " n'est pas dans votre faction !");
-			return false;
-		}
-		
-		Role role = offlineFPlayer.getRole();
-		Role kickerRole = fPlayer.getRole();
-		
-		if (role.getValue() >= kickerRole.getValue()) {
-			player.sendMessage("§cVous ne pouvez pas kick des " + role.getName().toLowerCase() + " de votre faction !");
-			faction.broadcast("§d§o" + kickerRole.getRole() + player.getName() + " §7a essayé de kick §d§o" + role.getRole() + kicked.getName() + " §7de la faction !");
-			return false;
-		}
-		
-		if (faction.removeMember(offlineFPlayer, LeaveReason.KICK, player)) {
-			if (kicked.isOnline()) 
-				kicked.getPlayer().sendMessage("§d§o" + kickerRole.getRole() + player.getName() + " §7vous a kick de la faction !");
-			faction.broadcast(new JSONMessage("§d§o" + kickerRole.getRole() + player.getName() + " §7a kick §d§o" + kicked.getName() + " §7de la faction !", "§a/f invite " + kicked.getName(), true, "/f invite " + kicked.getName()));
-			return true;
-		}
-		
-		return false;
+		return true;
 	}
 	
 	@Override
@@ -97,7 +101,7 @@ public class FactionKickArgument extends FactionArgument {
 			return Collections.emptyList();
 		
 		Player player = (Player) sender;
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
+		FPlayer fPlayer = FPlayer.getPlayer(player);
 		PlayerFaction faction = null;
 		
 		if ((faction = fPlayer.getFaction()) != null) {
@@ -106,8 +110,11 @@ public class FactionKickArgument extends FactionArgument {
 			if (role.isAtLeast(Role.OFFICER)) {
 				List<String> toKick = new ArrayList<>();
 				
-				for (UUID uuid : faction.getMembers()) {
-					OfflineFPlayer offline = OfflineFPlayer.getByUuid(uuid);
+				for (UUID uuid : faction.getMembersUUID()) {
+					OfflineFPlayer offline = OfflineFPlayer.getOfflineFPlayers().get(uuid);
+					
+					if (offline == null)
+						continue;
 					
 					if (role.getValue() <= offline.getRole().getValue()) continue;
 					

@@ -19,7 +19,9 @@ import net.onima.onimaapi.zone.struct.Flag;
 import net.onima.onimaapi.zone.type.Region;
 import net.onima.onimafaction.events.FactionPlayerJoinEvent;
 import net.onima.onimafaction.events.FactionPlayerLeaveEvent;
+import net.onima.onimafaction.faction.PlayerFaction;
 import net.onima.onimafaction.faction.claim.Claim;
+import net.onima.onimafaction.faction.struct.Relation;
 import net.onima.onimafaction.players.FPlayer;
 import net.onima.onimafaction.players.OfflineFPlayer;
 
@@ -126,7 +128,7 @@ public class CombatTagCooldown extends Cooldown implements Listener {
 		Entity entity;
 		
 		if (attacker != null && (entity = event.getEntity()) instanceof Player && !attacker.equals(entity)) {
-			if (FPlayer.getByPlayer(attacker).hasFactionBypass())
+			if (FPlayer.getPlayer(attacker).hasFactionBypass())
 				return;
 			
 			if (Claim.getClaimAndRegionAt(attacker.getLocation()).hasFlag(Flag.COMBAT_SAFE)) {
@@ -134,20 +136,33 @@ public class CombatTagCooldown extends Cooldown implements Listener {
 				event.setCancelled(true);
 				return;
 			} else if (Claim.getClaimAndRegionAt(entity.getLocation()).hasFlag(Flag.COMBAT_SAFE)) {
-				attacker.sendMessage("§cVous ne pouvez pas attaquer " + ((Player) entity).getName() + " car il est dans une zone où le combat est interdit !");
+				attacker.sendMessage("§cVous ne pouvez pas attaquer " + APIPlayer.getPlayer(entity.getUniqueId()).getDisplayName() + " car il est dans une zone où le combat est interdit !");
 				event.setCancelled(true);
 				return;
 			}
 			
+			FPlayer fPlayer = FPlayer.getPlayer((Player) entity);
+			FPlayer fAttacker = FPlayer.getPlayer(attacker);
+			PlayerFaction playerFaction = fPlayer.getFaction();
+			PlayerFaction attackerFaction = fAttacker.getFaction();
+				
+			if (playerFaction != null && attackerFaction != null) {
+				if (playerFaction.getRelation(attackerFaction) == Relation.MEMBER) {
+					attacker.sendMessage("§d§oVous §7ne pouvez pas attaquer " + Relation.MEMBER.getColor() + "§o" + fPlayer.getRole().getRole() + fPlayer.getApiPlayer().getDisplayName() + "§7.");
+					event.setCancelled(true);
+					return;
+				} else if (playerFaction.getRelation(attackerFaction) == Relation.ALLY)
+					attacker.sendMessage("§d§oVous §7avez attaqué " + Relation.ALLY.getColor() + "§o" + fPlayer.getRole().getRole() + fPlayer.getApiPlayer().getDisplayName() + "§7, il est votre allié.");
+			}
 			
-			onStart(OfflineAPIPlayer.getByOfflinePlayer(attacker));
-			onStart(OfflineAPIPlayer.getByUuid(entity.getUniqueId()));
+			onStart(APIPlayer.getPlayer(attacker));
+			onStart(APIPlayer.getPlayer(entity.getUniqueId()));
 		}
 	}
 	
 	@EventHandler
 	public void onRespawn(PlayerRespawnEvent event) {
-		onCancel(OfflineAPIPlayer.getByOfflinePlayer(event.getPlayer()));
+		onCancel(APIPlayer.getPlayer(event.getPlayer()));
 	}
 
 }

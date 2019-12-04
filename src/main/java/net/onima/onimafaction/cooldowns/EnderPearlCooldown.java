@@ -86,6 +86,14 @@ public class EnderPearlCooldown extends Cooldown implements Listener {
 	}
 	
 	@Override
+	public void onCancel(OfflineAPIPlayer offline) {
+		super.onCancel(offline);
+		
+		if (offline.isOnline())
+			stopDisplaying(((APIPlayer) offline).toPlayer());
+	}
+	
+	@Override
 	public boolean action(OfflineAPIPlayer offline) {
 		return false;
 	}
@@ -122,7 +130,7 @@ public class EnderPearlCooldown extends Cooldown implements Listener {
 					event.setCancelled(true);
 					return;
 				} else {
-					onStart(OfflineAPIPlayer.getByOfflinePlayer(shooter));
+					onStart(APIPlayer.getPlayer(shooter));
 					startDisplaying(shooter);
 				}
 			}
@@ -189,7 +197,7 @@ public class EnderPearlCooldown extends Cooldown implements Listener {
 	public void onPearlClip(PlayerTeleportEvent event) {
 		if (event.getCause() == TeleportCause.ENDER_PEARL && blockedPearlTypes.contains(event.getTo().getBlock().getType())) {
 			Player player = event.getPlayer();
-			APIPlayer apiPlayer = APIPlayer.getByPlayer(player);
+			APIPlayer apiPlayer = APIPlayer.getPlayer(player);
 			
 			player.sendMessage("§cVotre enderpearl a atteri sur un block interdit.");
 			apiPlayer.removeCooldown(EnderPearlCooldown.class);
@@ -200,7 +208,7 @@ public class EnderPearlCooldown extends Cooldown implements Listener {
 	
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 	public void onEnderpearlLand(PlayerTeleportEvent event) {
-		APIPlayer apiPlayer = APIPlayer.getByPlayer(event.getPlayer());
+		APIPlayer apiPlayer = APIPlayer.getPlayer(event.getPlayer());
 		
 		if (event.getCause() == TeleportCause.ENDER_PEARL) {
 			Region region = Claim.getClaimAndRegionAt(event.getTo());
@@ -211,7 +219,7 @@ public class EnderPearlCooldown extends Cooldown implements Listener {
 				apiPlayer.sendMessage("§cVous ne pouvez pas lancer d'§eenderpearl §cdans " + region.getDisplayName(apiPlayer.toPlayer()));
 				event.setCancelled(true);
 			}
-		} else if (event.getCause() == TeleportCause.ENDER_PEARL && WorldBorder.border(event.getTo()) && !apiPlayer.getRank().getRankType().hasPermission(OnimaPerm.WORLD_BORDER_BYPASS)) {
+		} else if (event.getCause() == TeleportCause.ENDER_PEARL && WorldBorder.border(event.getTo()) && !OnimaPerm.WORLD_BORDER_BYPASS.has(apiPlayer.toPlayer())) {
 			apiPlayer.sendMessage("§cVous ne pouvez pas lancer d'§eenderpearls §cau-delà de la bordure !");		
 			onCancel(apiPlayer);
 			apiPlayer.toPlayer().getInventory().addItem(new ItemStack(Material.ENDER_PEARL));

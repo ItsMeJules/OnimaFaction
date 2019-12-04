@@ -10,10 +10,13 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.util.StringUtil;
 
 import net.md_5.bungee.api.chat.ClickEvent;
+import net.onima.onimaapi.caching.UUIDCache;
 import net.onima.onimaapi.rank.OnimaPerm;
 import net.onima.onimaapi.utils.JSONMessage;
+import net.onima.onimaapi.utils.Methods;
 import net.onima.onimafaction.commands.faction.FactionArgument;
 import net.onima.onimafaction.faction.PlayerFaction;
 import net.onima.onimafaction.faction.struct.Role;
@@ -30,54 +33,54 @@ public class FactionLeaderArgument extends FactionArgument {
 		role = Role.LEADER;
 	}
 
-	@SuppressWarnings("deprecation")
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		if (checks(sender, args, 2, true))
 			return false;
 		
 		Player player = (Player) sender;
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
-		PlayerFaction faction = null;
+		FPlayer fPlayer = FPlayer.getPlayer(player);
+		PlayerFaction faction = fPlayer.getFaction();
 		
-		if ((faction = fPlayer.getFaction()) == null) {
+		if (faction == null) {
 			player.spigot().sendMessage(new JSONMessage("§cVous avez besoin d'une faction pour pouvoir définir un leader !", "§a/f create ", true, "/f create ", ClickEvent.Action.SUGGEST_COMMAND).build());
 			return false;
 		}
 		
-		OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
+		OfflinePlayer target = Bukkit.getOfflinePlayer(UUIDCache.getUUID(args[1]));
 		
-		if (!target.hasPlayedBefore()) {
+		if (!target.hasPlayedBefore() && !target.isOnline()) {
 			player.sendMessage("§c" + args[1] + " ne s'est jamais connecté sur le serveur !");
 			return false;
 		}
 		
-		OfflineFPlayer offline = OfflineFPlayer.getByOfflinePlayer(target);
+		OfflineFPlayer.getPlayer(target, offline -> {
+			if (target.getName().equalsIgnoreCase(player.getName())) {
+				player.sendMessage("§cVous êtes déjà leader de votre faction !");
+				return;
+			}
+			
+			offline.setRole(Role.LEADER);
+			fPlayer.setRole(Role.COLEADER);
+			faction.broadcast("§d§o" + fPlayer.getApiPlayer().getName() + " a donné son rôle de leader à §d§o" + Methods.getRealName(target) + "§7.");
+		});
 		
-		if (target.getName().equalsIgnoreCase(player.getName())) {
-			player.sendMessage("§cVous êtes déjà leader de votre faction !");
-			return false;
-		}
-		
-		offline.setRole(Role.LEADER);
-		fPlayer.setRole(Role.COLEADER);
-		faction.broadcast("§d§o" + player.getName() + " a donné son rôle de leader à §d§o" + target.getName() + "§7.");
-		return false;
+		return true;
 	}
 
 	@Override
 	public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args) {
 		if (sender instanceof Player && args.length == 2) {
 			Player player = (Player) sender;
-			FPlayer fPlayer = FPlayer.getByPlayer(player);
+			FPlayer fPlayer = FPlayer.getPlayer(player);
 			
 			if (fPlayer.getRole() == Role.LEADER) {
 				List<String> completions = new ArrayList<>(19);
 				
-				for (UUID uuid : fPlayer.getFaction().getMembers()) {
-					OfflineFPlayer offline = OfflineFPlayer.getByUuid(uuid);
+				for (UUID uuid : fPlayer.getFaction().getMembersUUID()) {
+					OfflineFPlayer offline = OfflineFPlayer.getOfflineFPlayers().get(uuid);
 					
-					if (offline.getRole() == Role.LEADER)
+					if (offline == null || offline.getRole() == Role.LEADER || !StringUtil.startsWithIgnoreCase(offline.getOfflineApiPlayer().getName(), args[1]))
 						continue;
 					
 					completions.add(offline.getOfflineApiPlayer().getName());

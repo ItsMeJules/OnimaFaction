@@ -23,19 +23,24 @@ import net.onima.onimafaction.faction.struct.Role;
 
 public class FactionChatMessage extends ChatMessage {
 	
+	private Player player;
 	private Faction faction;
 	private Chat chat;
 	private Role role;
 	private BaseComponent[] enemyComponents, allyComponents, factionComponents;
 
-	public FactionChatMessage(Player player, String message) {
-		super(player, message);
+	public FactionChatMessage(String playerName, String message, Player player) {
+		super(playerName, message);
+		
+		this.player = player;
 	}
 	
-	public FactionChatMessage(Player player) {
-		super(player);
+	public FactionChatMessage(String playerName, Player player) {
+		super(playerName);
+		
+		this.player = player;
 	}
-
+	
 	public FactionChatMessage faction(Faction faction) {
 		this.faction = faction;
 		return this;
@@ -100,6 +105,12 @@ public class FactionChatMessage extends ChatMessage {
 	}
 	
 	@Override
+	public FactionChatMessage canUseColor(boolean colors) {
+		super.canUseColor(colors);
+		return this;
+	}
+	
+	@Override
 	public FactionChatMessage build() {
 		if (faction == null) { 
 			ComponentBuilder builder = new ComponentBuilder(ConfigurationService.NO_FACTION_CHARACTER + ' ');
@@ -110,9 +121,9 @@ public class FactionChatMessage extends ChatMessage {
 			builder.event(new ClickEvent(ClickEvent.Action.RUN_COMMAND, rankClickCommand));
 			
 			builder.append(rank == RankType.DEFAULT ? "" : " ", FormatRetention.NONE);
-			builder.append(nameColor + player.getName() + "§r");
+			builder.append(nameColor + playerName + "§r");
 			builder.append(": ");
-			builder.append(chatColor + message.toString());
+			builder.append(chatColor + (colors ? Methods.colors(message.toString()) : message.toString()));
 			
 			components = builder.create();
 		} else {
@@ -134,7 +145,7 @@ public class FactionChatMessage extends ChatMessage {
 					}
 					
 					builder.append(rank == RankType.DEFAULT ? "" : " ", FormatRetention.NONE);
-					builder.append(nameColor + player.getName() + "§r");
+					builder.append(nameColor + playerName + "§r");
 
 					if (!jsonPre) {
 						builder.event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(rank.getDescription()).create()));
@@ -144,7 +155,7 @@ public class FactionChatMessage extends ChatMessage {
 					builder.retain(FormatRetention.NONE);
 					
 					builder.append(": ");
-					builder.append(chatColor + message.toString());
+					builder.append(chatColor + (colors ? Methods.colors(message.toString()) : message.toString()));
 					
 					switch (relation) {
 					case ALLY:
@@ -165,18 +176,18 @@ public class FactionChatMessage extends ChatMessage {
 				
 				builder.append(Relation.ALLY.getColor() + "[" + faction.getName() + "] ");
 				builder.append(Relation.ALLY.getColor() + role.getRole());
-				builder.append(Relation.ALLY.getColor() + player.getName() + "§r");
+				builder.append(Relation.ALLY.getColor() + playerName + "§r");
 				builder.append(": ");
-				builder.append("§e" + message.toString());
+				builder.append(chatColor + (colors ? Methods.colors(message.toString()) : message.toString()));
 				
 				components = builder.create();
 			} else if (chat == Chat.FACTION) {
 				ComponentBuilder builder = new ComponentBuilder(Relation.MEMBER.getColor() + "(" + chat.getChat() + ") ");
 				
 				builder.append(Relation.MEMBER.getColor() + role.getRole());
-				builder.append(Relation.MEMBER.getColor() + player.getName() + "§r");
+				builder.append(Relation.MEMBER.getColor() + playerName + "§r");
 				builder.append(": ");
-				builder.append("§e" + message.toString());
+				builder.append(chatColor + (colors ? Methods.colors(message.toString()) : message.toString()));
 				
 				components = builder.create();
 			}

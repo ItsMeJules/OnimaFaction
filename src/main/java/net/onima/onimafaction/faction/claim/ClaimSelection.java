@@ -98,7 +98,7 @@ public class ClaimSelection {
 	public void remove(APIPlayer apiPlayer) {
 		pillar1.forEach(fb -> apiPlayer.removeFakeBlock(fb));
 		pillar2.forEach(fb -> apiPlayer.removeFakeBlock(fb));
-		FPlayer.getByUuid(apiPlayer.getUUID()).setClaimSelection(null);
+		FPlayer.getPlayer(apiPlayer.getUUID()).setClaimSelection(null);
 		apiPlayer.toPlayer().setItemInHand(null);
 	}
 	

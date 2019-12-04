@@ -82,11 +82,21 @@ public class PvPTimerCooldown extends Cooldown implements Listener {
 	}
 	
 	@Override
-	public void onStart(OfflineAPIPlayer offline) {
-		if (offline.isOnline())
-			((APIPlayer) offline).sendMessage("§aVous avez maintenant votre pvp timer pour " + LongTime.setYMDWHMSFormat(duration) + '.');
-
-		super.onStart(offline);
+	public void onStart(OfflineAPIPlayer offline, long time) {
+		super.onStart(offline, time);
+		
+		if (offline.isOnline()) {
+			APIPlayer apiPlayer = (APIPlayer) offline;
+			Player player = apiPlayer.toPlayer();
+			Region region = Claim.getClaimAndRegionAt(player.getLocation());
+			
+			apiPlayer.sendMessage("§aVous avez maintenant votre pvp timer pour " + LongTime.setYMDWHMSFormat(duration) + '.');
+			
+			if (!(region instanceof WildernessClaim) && region.hasFlag(Flag.PVP_TIMER_PAUSE)) {
+				apiPlayer.sendMessage("§7Tant que vous restez dans " + region.getDisplayName(player) + "§7, votre pvp timer sera en §apause§7.");
+				super.startPause(apiPlayer);
+			}
+		}
 	}
 	
 	@Override
@@ -107,6 +117,14 @@ public class PvPTimerCooldown extends Cooldown implements Listener {
 			((APIPlayer) offline).removeFakeBlockByType(FakeType.PVP_TIMER_REGION_BORDER);
 		
 		super.onCancel(offline);
+	}
+	
+	@Override
+	public void startPause(OfflineAPIPlayer offline) {
+		if (offline.isOnline())
+			((APIPlayer) offline).sendMessage("§7Votre §epvp timer §7est maintenant en pause.");
+		
+		super.startPause(offline);
 	}
 	
 	@Override
@@ -137,7 +155,10 @@ public class PvPTimerCooldown extends Cooldown implements Listener {
 	
 	@EventHandler
 	public void onRespawn(PlayerRespawnEvent event) {
-		onStart(OfflineAPIPlayer.getByOfflinePlayer(event.getPlayer()));
+		Player player = event.getPlayer();
+		
+		onStart(APIPlayer.getPlayer(player));
+		onPlayerSpawnLocation(new PlayerSpawnLocationEvent(player, event.getRespawnLocation()));
 	}
 	
 	@EventHandler
@@ -210,25 +231,26 @@ public class PvPTimerCooldown extends Cooldown implements Listener {
 	@EventHandler
 	public void onQuit(PlayerQuitEvent event) {
 		if (getTimeLeft(event.getPlayer().getUniqueId()) > 0L)
-			startPause(OfflineAPIPlayer.getByOfflinePlayer(event.getPlayer()));
+			startPause(APIPlayer.getPlayer(event.getPlayer()));
 	}
 	
 	@EventHandler
 	public void onPlayerSpawnLocation(PlayerSpawnLocationEvent event) {
 		Location location = event.getSpawnLocation();
 		Player player = event.getPlayer();
-		OfflineAPIPlayer offline = OfflineAPIPlayer.getByOfflinePlayer(player);
+		FPlayer fPlayer = FPlayer.getPlayer(player);
+		APIPlayer apiPlayer = fPlayer.getApiPlayer();
 		Region region = Claim.getClaimAndRegionAt(location);
 		
 		if (!player.hasPlayedBefore() && !OnimaFaction.getInstance().getEOTW().isRunning() && !OnimaFaction.getInstance().getSOTW().isRunning())
-			onStart(offline);
+			onStart(apiPlayer);
 		 
 		long timeLeft = getTimeLeft(player.getUniqueId());
 		
 		if (!(region instanceof WildernessClaim) && region.hasFlag(Flag.PVP_TIMER_PAUSE) && timeLeft > 0L)
-			startPause(offline);
+			startPause(apiPlayer);
 		else if (timeLeft > 0L && isPaused(player.getUniqueId()))
-			stopPause(offline);
+			stopPause(apiPlayer);
 	}
 	
 	@EventHandler
@@ -242,7 +264,7 @@ public class PvPTimerCooldown extends Cooldown implements Listener {
 		Region to = event.getNewRegion();
 		Region from = event.getRegion();
 
-		if (event.getCause() == PlayerRegionChangeEvent.PlayerRegionChangementCause.TELEPORT && to instanceof Claim && ((Claim) to).getFaction().equals(FPlayer.getByUuid(apiPlayer.getUUID()).getFaction())) {
+		if (event.getCause() == PlayerRegionChangeEvent.PlayerRegionChangementCause.TELEPORT && to instanceof Claim && ((Claim) to).getFaction().equals(FPlayer.getPlayer(apiPlayer.getUUID()).getFaction())) {
 			apiPlayer.sendMessage("§bVous êtes entré dans votre propre claim, vous avez donc perdu votre pvp timer.");
 			onCancel(apiPlayer);
 		}
@@ -262,6 +284,7 @@ public class PvPTimerCooldown extends Cooldown implements Listener {
 		Entity entity = event.getEntity();
 		
 		if (entity instanceof Player) {
+			Player player = (Player) entity;
 			Player attacker = Methods.getLastAttacker(event);
 			
 			if (attacker == null || attacker.equals(entity))
@@ -270,10 +293,10 @@ public class PvPTimerCooldown extends Cooldown implements Listener {
 			long timeLeft;
 			
 			if ((timeLeft = getTimeLeft(attacker.getUniqueId())) > 0L) {
-				attacker.sendMessage("§cVous ne pouvez pas attaquer §e" + ((Player) entity).getName() + " §ccar votre §epvp timer §cest actif (§e" + LongTime.setDHMSFormat(timeLeft) + "§c).");
+				attacker.sendMessage("§cVous ne pouvez pas attaquer §e" + Methods.getName(player) + " §ccar votre §epvp timer §cest actif (§e" + LongTime.setDHMSFormat(timeLeft) + "§c).");
 				event.setCancelled(true);
 			} else if ((timeLeft = getTimeLeft(entity.getUniqueId())) > 0L) {
-				attacker.sendMessage("§cVous ne pouvez pas attaquer §e" + ((Player) entity).getName() + " §ccar son §epvp timer §cest actif (§e" + LongTime.setDHMSFormat(timeLeft) + "§c).");
+				attacker.sendMessage("§cVous ne pouvez pas attaquer §e" + Methods.getName(player) + " §ccar son §epvp timer §cest actif (§e" + LongTime.setDHMSFormat(timeLeft) + "§c).");
 				event.setCancelled(true);
 			}
 		}
@@ -299,7 +322,7 @@ public class PvPTimerCooldown extends Cooldown implements Listener {
 					long timeLeft;
 					
 					if ((timeLeft = getTimeLeft(player.getUniqueId())) > 0L) {
-						shooter.sendMessage("§cVous ne pouvez pas attaquer §e" + player.getName() + " §ccar son §epvp timer §cest actif (§e" + LongTime.setDHMSFormat(timeLeft) + "§c).");
+						shooter.sendMessage("§cVous ne pouvez pas attaquer §e" + Methods.getName(shooter) + " §ccar son §epvp timer §cest actif (§e" + LongTime.setDHMSFormat(timeLeft) + "§c).");
 						event.setIntensity(player, 0);
 					}
 				}

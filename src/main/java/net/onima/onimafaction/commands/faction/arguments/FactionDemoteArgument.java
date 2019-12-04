@@ -5,13 +5,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import net.md_5.bungee.api.chat.ClickEvent;
+import net.onima.onimaapi.caching.UUIDCache;
 import net.onima.onimaapi.rank.OnimaPerm;
 import net.onima.onimaapi.utils.JSONMessage;
 import net.onima.onimafaction.commands.faction.FactionArgument;
@@ -30,55 +29,58 @@ public class FactionDemoteArgument extends FactionArgument {
 		role = Role.COLEADER;
 	}
 	
-	@SuppressWarnings("deprecation")
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		if (checks(sender, args, 2, true))
 			return false;
 		
 		Player player = (Player) sender;
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
-		PlayerFaction faction = null;
+		FPlayer fPlayer = FPlayer.getPlayer(player);
+		PlayerFaction faction = fPlayer.getFaction();
 		
-		if ((faction = fPlayer.getFaction()) == null) {
+		if (faction == null) {
 			player.spigot().sendMessage(new JSONMessage("§cVous avez besoin d'une faction pour dégrader un joueur !", "§a/f create ", true, "/f create ", ClickEvent.Action.SUGGEST_COMMAND).build());
 			return false;
 		}
 		
-		OfflinePlayer offline = Bukkit.getOfflinePlayer(args[1]);
-		OfflineFPlayer offlineFPlayer = OfflineFPlayer.getByOfflinePlayer(offline);
+		UUID uuid = UUIDCache.getUUID(args[1]);
 		
-		if (!offline.hasPlayedBefore()) {
-			player.sendMessage("§c" + args[1] + " ne s'est jamais connecté sur le serveur !");
+		if (uuid == null) {
+			player.sendMessage("§c" + args[2] + " ne s'est jamais connecté sur le serveur !");
 			return false;
 		}
 		
-		if (!faction.getMembers().contains(offline.getUniqueId())) {
-			player.sendMessage("§c" + offline.getName() + " n'est pas dans votre faction !");
+		if (!faction.getMembers().containsKey(uuid)) {
+			player.sendMessage("§c" + args[1] + " n'est pas dans votre faction !");
 			return false;
 		}
 		
-		if (player.getUniqueId().equals(offlineFPlayer.getOfflineApiPlayer().getUUID())) {
+		if (player.getUniqueId().equals(uuid)) {
 			player.sendMessage("§cVous ne pouvez pas vous dégrader vous même !");
 			return false;
 		}
 		
-		Role playerRole = fPlayer.getRole();
-		Role offlineRole = offlineFPlayer.getRole();
+		OfflineFPlayer.getPlayer(uuid, offlineFPlayer -> {
+			Role playerRole = fPlayer.getRole();
+			Role offlineRole = offlineFPlayer.getRole();
+			
+			if (offlineRole.getValue() < playerRole.getValue()) {
+				player.sendMessage("§cVous ne pouvez pas dégrader un joueur ayant un rôle supérieur ou égal au votre !");
+				return;
+			}
+			
+			if (offlineRole == Role.MEMBER) {
+				player.sendMessage("§cVous ne pouvez pas dégrader en-dessous de " + Role.MEMBER.getName().toLowerCase() + " !");
+				return;
+			}
+			
+			String promoteCmd = "/f promote" + offlineFPlayer.getOfflineApiPlayer().getName();
+			
+			offlineFPlayer.setRole(offlineRole = Role.fromValue(offlineRole.getValue() - 1));
+			faction.broadcast(new JSONMessage("§d§o" + playerRole.getRole() + fPlayer.getApiPlayer().getName() + " §7a dégradé §d§o" + offlineFPlayer.getOfflineApiPlayer().getName() + " §7au rôle de §d§o" + offlineRole.getName().toLowerCase(), "§a" + promoteCmd, true, promoteCmd));
+		});
 		
-		if (offlineRole.getValue() < playerRole.getValue()) {
-			player.sendMessage("§cVous ne pouvez pas dégrader un joueur ayant un rôle supérieur ou égal au votre !");
-			return false;
-		}
-		
-		if (offlineRole == Role.MEMBER) {
-			player.sendMessage("§cVous ne pouvez pas dégrader en-dessous de " + Role.MEMBER.getName().toLowerCase() + " !");
-			return false;
-		}
-		
-		offlineFPlayer.setRole(offlineRole = Role.fromValue(offlineRole.getValue() - 1));
-		faction.broadcast(new JSONMessage("§d§o" + playerRole.getRole() + player.getName() + " §7a dégradé §d§o" + offline.getName() + " §7au rôle de §d§o" + offlineRole.getName().toLowerCase(), "§a/f promote" + offline.getName(), true, "/f promote" + offline.getName()));
-		return false;
+		return true;
 	}
 	
 	@Override
@@ -86,15 +88,19 @@ public class FactionDemoteArgument extends FactionArgument {
 		if (!checks(sender, args, 2, false) || args.length == 2) {
 		
 			Player player = (Player) sender;
-			FPlayer fPlayer = FPlayer.getByPlayer(player);
+			FPlayer fPlayer = FPlayer.getPlayer(player);
 			PlayerFaction faction = null;
 		
 			if ((faction = fPlayer.getFaction()) != null) {
 				Role playerRole = fPlayer.getRole();
 				List<String> completions = new ArrayList<>();
 				
-				for (UUID uuid : faction.getMembers()) {
-					OfflineFPlayer offlineFPlayer = OfflineFPlayer.getByUuid(uuid);
+				for (UUID uuid : faction.getMembersUUID()) {
+					OfflineFPlayer offlineFPlayer = OfflineFPlayer.getOfflineFPlayers().get(uuid);
+					
+					if (offlineFPlayer == null)
+						continue;
+					
 					Role memberRole = offlineFPlayer.getRole();
 					
 					if (memberRole.getValue() < playerRole.getValue() && memberRole != Role.MEMBER)

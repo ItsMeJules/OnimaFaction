@@ -4,14 +4,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.util.StringUtil;
 
+import net.onima.onimaapi.OnimaAPI;
 import net.onima.onimaapi.rank.OnimaPerm;
 import net.onima.onimaapi.utils.JSONMessage;
+import net.onima.onimaapi.utils.Methods;
 import net.onima.onimaapi.utils.time.TimeUtils;
 import net.onima.onimafaction.OnimaFaction;
 import net.onima.onimafaction.timed.FactionServerEvent;
@@ -23,7 +26,7 @@ public class RaidableCommand implements CommandExecutor, TabCompleter {
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		if (!OnimaPerm.RAIDABLE_COMMAND.has(sender)) {
-			sender.sendMessage(OnimaPerm.RAIDABLE_COMMAND.getMissingMessage());
+			sender.sendMessage(OnimaAPI.UNKNOWN_COMMAND);
 			return false;
 		}
 		
@@ -38,6 +41,7 @@ public class RaidableCommand implements CommandExecutor, TabCompleter {
 				
 				if (raidable.isRunning()) {
 					raidable.action(EventAction.CANCELLED);
+					Bukkit.broadcastMessage(raidable.getMessage(EventAction.CANCELLED).replace("%player%", Methods.getRealName(sender)));
 					return true;
 				} else
 					sender.sendMessage("§cL'event n'est pas en cours !");
@@ -61,7 +65,7 @@ public class RaidableCommand implements CommandExecutor, TabCompleter {
 					sender.sendMessage("§cMauvais format, essayez comme ceci : 1mi ou 1se ou 1ye etc...");
 					return false;
 				} else
-					new Raidable(time, delay).start();
+					new Raidable(time, delay).start(Methods.getRealName(sender));
 			}
 			return true;
 		} else {

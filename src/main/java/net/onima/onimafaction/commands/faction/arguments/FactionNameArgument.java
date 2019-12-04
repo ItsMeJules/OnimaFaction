@@ -34,7 +34,7 @@ public class FactionNameArgument extends FactionArgument {
 			return false;
 		
 		Player player = (Player) sender;
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
+		FPlayer fPlayer = FPlayer.getPlayer(player);
 		PlayerFaction faction = null;
 		
 		if ((faction = fPlayer.getFaction()) == null) {
@@ -72,7 +72,7 @@ public class FactionNameArgument extends FactionArgument {
 		
 		faction.setName(name);
 		faction.setRenameCooldown(ConfigurationService.FACTION_RENAME_TIME + System.currentTimeMillis());
-		Bukkit.broadcastMessage("§d§o" + fPlayer.getRole().getRole() + player.getName() + " §7a renommé sa faction en §d§o" + name + "§7.");
+		Bukkit.broadcastMessage("§d§o" + fPlayer.getRole().getRole() + fPlayer.getApiPlayer().getName() + " §7a renommé sa faction en §d§o" + name + "§7.");
 		
 		return true;
 	}

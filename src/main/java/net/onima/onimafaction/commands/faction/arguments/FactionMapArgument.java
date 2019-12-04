@@ -26,7 +26,7 @@ public class FactionMapArgument extends FactionArgument {
 			return false;
 		
 		Player player = (Player) sender;
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
+		FPlayer fPlayer = FPlayer.getPlayer(player);
 		
 		fPlayer.setfMap(!fPlayer.hasfMap(), true);
 		return true;

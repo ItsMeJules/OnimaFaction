@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.conversations.Conversable;
@@ -12,11 +13,11 @@ import org.bukkit.conversations.ConversationContext;
 import org.bukkit.conversations.ConversationFactory;
 import org.bukkit.conversations.Prompt;
 import org.bukkit.conversations.StringPrompt;
-import org.bukkit.entity.Player;
 import org.bukkit.util.StringUtil;
 
 import net.onima.onimaapi.rank.OnimaPerm;
 import net.onima.onimaapi.utils.JSONMessage;
+import net.onima.onimaapi.utils.Methods;
 import net.onima.onimafaction.OnimaFaction;
 import net.onima.onimafaction.commands.faction.FactionArgument;
 import net.onima.onimafaction.faction.Faction;
@@ -37,15 +38,10 @@ public class FactionClearClaimsArgument extends FactionArgument {
 		if (checks(sender, args, 2, true))
 			return false;
 		
-		if (args[1].equalsIgnoreCase("all")) {
-			if (sender.hasPermission(OnimaPerm.ONIMAFACTION_CLEARCLAIMS_ALL.getPermission())) {
-				Conversable conversable = (Conversable) sender;
-				conversable.beginConversation(new ConversationFactory(OnimaFaction.getInstance()).withFirstPrompt(new ClearClaimAllPrompt()).withEscapeSequence("/no").withTimeout(10).withModality(false).withLocalEcho(true).buildConversation(conversable));
-				return true;
-			} else {
-				sender.sendMessage(OnimaPerm.ONIMAFACTION_CLEARCLAIMS_ALL.getMissingMessage());
-				return false;
-			}
+		if (args[1].equalsIgnoreCase("all") && OnimaPerm.ONIMAFACTION_CLEARCLAIMS_ALL.has(sender)) {
+			Conversable conversable = (Conversable) sender;
+			conversable.beginConversation(new ConversationFactory(OnimaFaction.getInstance()).withFirstPrompt(new ClearClaimAllPrompt()).withEscapeSequence("/no").withTimeout(10).withModality(false).withLocalEcho(true).buildConversation(conversable));
+			return true;
 		}
 		
 		Faction faction = null;
@@ -56,7 +52,7 @@ public class FactionClearClaimsArgument extends FactionArgument {
 		}
 		
 		if (faction instanceof PlayerFaction)
-			((PlayerFaction) faction).broadcast("§d§o" + sender.getName() + " §7a clear tous vos claims !");
+			((PlayerFaction) faction).broadcast("§d§o" + Methods.getRealName(sender) + " §7a clear tous vos claims !");
 		
 		sender.sendMessage("§d§oVous §7avez clear tous les claims de la faction §d§o" + faction.getName());
 		faction.clearClaims();
@@ -79,7 +75,7 @@ public class FactionClearClaimsArgument extends FactionArgument {
 			
 			if (input.equalsIgnoreCase("oui")) {
 				Faction.getFactions().forEach(faction -> faction.clearClaims());
-				Bukkit.broadcastMessage("§c§lTOUS LES CLAIMS ONT ETE SUPPRIME PAR " + ((Player) context.getForWhom()).getName());
+				Bukkit.broadcastMessage("§c§lTOUS LES CLAIMS ONT ETE SUPPRIME PAR " + Methods.getRealName(((OfflinePlayer) context.getForWhom())));
 				return Prompt.END_OF_CONVERSATION;
 			} else if(input.equalsIgnoreCase("non")) {
 				conversable.sendRawMessage("§cVous avez abandonné le fait de supprimer tous les claims du serveur.");

@@ -59,7 +59,7 @@ public class ArcherMarkCooldown extends Cooldown implements Listener {
 	public void onExpire(OfflineAPIPlayer offline) {
 		if (offline.isOnline()) {
 			((APIPlayer) offline).sendMessage("§aVous n'êtes plus taggé par un archer !");
-			FPlayer.getByUuid(offline.getUUID()).setArcherTag(0);
+			FPlayer.getPlayer(offline.getUUID()).setArcherTag(0);
 		}
 		
 		super.onExpire(offline);
@@ -70,7 +70,7 @@ public class ArcherMarkCooldown extends Cooldown implements Listener {
 		Entity entity = event.getEntity();
 		
 		if (entity instanceof Player && getTimeLeft(entity.getUniqueId()) > 0L && Methods.getLastAttacker(event) != null)
-			event.setDamage((double) event.getDamage() * getMultiplier(FPlayer.getByUuid(entity.getUniqueId())));
+			event.setDamage((double) event.getDamage() * getMultiplier(FPlayer.getPlayer(entity.getUniqueId())));
 	}
 	
 	@EventHandler
@@ -80,7 +80,7 @@ public class ArcherMarkCooldown extends Cooldown implements Listener {
 		if (entity instanceof Player) {
 			Entity projectile = event.getProjectile();
 			
-			if (!FPlayer.getByUuid(entity.getUniqueId()).getArmorClass(Archer.class).isActivated()) return;
+			if (!FPlayer.getPlayer(entity.getUniqueId()).getArmorClass(Archer.class).isActivated()) return;
 			
 			if (projectile instanceof Arrow) {
 				if (event.getForce() >= 1.0)
@@ -101,18 +101,18 @@ public class ArcherMarkCooldown extends Cooldown implements Listener {
 			
 			if (shooter == null || shooter.equals(entity)) return;
 			
-			FPlayer fPlayer = FPlayer.getByPlayer(shooter);
+			FPlayer fPlayer = FPlayer.getPlayer(shooter);
 			
 			if (fPlayer.getArmorClass(Archer.class).isActivated()) {
-				FPlayer fDamaged = FPlayer.getByPlayer(damaged);
+				FPlayer fDamaged = FPlayer.getPlayer(damaged);
 				
 				fDamaged.incrementTag();
 				onStart(fDamaged.getOfflineApiPlayer());
 				
 				double distance = Double.valueOf(Methods.round("0.0", shooter.getLocation().distance(damaged.getLocation())));
 				int tag = fDamaged.getArcherTag();
-				String damagedName = damaged.hasPotionEffect(PotionEffectType.INVISIBILITY) ? "???" : damaged.getName();
-				String shooterName = damaged.hasPotionEffect(PotionEffectType.INVISIBILITY) ? "???" : shooter.getName();
+				String damagedName = damaged.hasPotionEffect(PotionEffectType.INVISIBILITY) ? "???" : fDamaged.getApiPlayer().getDisplayName();
+				String shooterName = damaged.hasPotionEffect(PotionEffectType.INVISIBILITY) ? "???" : fPlayer.getApiPlayer().getDisplayName();
 				
 				damaged.sendMessage("§7[§9Distance §7(§c" + distance + "§7)] §c§lVous avez été tag par §e" + shooterName + " §7(Dégâts multiplié par " + getMultiplier(fDamaged) + ").");
 				shooter.sendMessage("§7[§9Distance §7(§c" + distance + "§7)] §7Vous avez tag §e" + damagedName + " §f[§a" + tag + "§f] §7(Dégâts multiplié par " + getMultiplier(fDamaged) + "). (§e" + Methods.round("0.0", (((Damageable) damaged).getHealth() - event.getFinalDamage()) / 2) + " §4❤§7)");

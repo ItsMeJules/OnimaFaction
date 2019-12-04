@@ -3,6 +3,7 @@ package net.onima.onimafaction.commands.faction.arguments.staff;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
@@ -12,8 +13,10 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.util.StringUtil;
 
+import net.onima.onimaapi.caching.UUIDCache;
 import net.onima.onimaapi.rank.OnimaPerm;
 import net.onima.onimaapi.utils.JSONMessage;
+import net.onima.onimaapi.utils.Methods;
 import net.onima.onimafaction.commands.faction.FactionArgument;
 import net.onima.onimafaction.events.FactionPlayerJoinEvent;
 import net.onima.onimafaction.faction.Faction;
@@ -32,7 +35,6 @@ public class FactionForceJoinArgument extends FactionArgument {
 		playerOnly = true;
 	}
 
-	@SuppressWarnings("deprecation")
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		if (checks(sender, args, 2, true))
@@ -54,39 +56,39 @@ public class FactionForceJoinArgument extends FactionArgument {
 		PlayerFaction faction = (PlayerFaction) maybeFaction;
 		
 		if (args.length > 2) {
-			OfflinePlayer offline = Bukkit.getOfflinePlayer(args[2]);
+			UUID uuid = UUIDCache.getUUID(args[2]);
 			
-			if (!offline.hasPlayedBefore()) {
+			if (uuid == null) {
 				player.sendMessage("§c" + args[2] + " ne s'est jamais connecté sur le serveur !");
 				return false;
 			}
 			
-			OfflineFPlayer fPlayer = OfflineFPlayer.getByOfflinePlayer(offline);
-			FactionPlayerJoinEvent event = new FactionPlayerJoinEvent(fPlayer, faction, true);
-			
-			Bukkit.getPluginManager().callEvent(event);
-			if (event.isCancelled()) return false;
-			
-			if (fPlayer.hasFaction() && fPlayer.getFaction().getMembers().size() == 1) {
-				fPlayer.getFaction().disband(null);
-				Bukkit.broadcastMessage("§d§o" + offline.getName() + " §7a dissout la faction §d§o" + faction.getName());
-			}
-			
-			faction.addMember(fPlayer);
-			faction.broadcast("§d§o" + sender.getName() + " §7a forcé §d§o" + offline.getName() + " §7a rejoindre la faction.");
-			player.sendMessage("§d§oVous §7avez forcé §d§o" + offline.getName() + " §7a rejoindre la faction §d§o" + faction.getName() + "§7.");
-			
-			return true;
+			OfflineFPlayer.getPlayer(uuid, fPlayer -> {
+				FactionPlayerJoinEvent event = new FactionPlayerJoinEvent(fPlayer, faction, true);
+				
+				Bukkit.getPluginManager().callEvent(event);
+				if (event.isCancelled())
+					return;
+				
+				if (fPlayer.hasFaction() && fPlayer.getFaction().getMembers().size() == 1) {
+					fPlayer.getFaction().disband(null);
+					Bukkit.broadcastMessage("§d§o" + fPlayer.getOfflineApiPlayer().getName() + " §7a dissout la faction §d§o" + faction.getName());
+				}
+				
+				faction.addMember(fPlayer);
+				faction.broadcast("§d§o" + Methods.getRealName(sender) + " §7a forcé §d§o" + fPlayer.getOfflineApiPlayer().getName() + " §7à rejoindre la faction.");
+				player.sendMessage("§d§oVous §7avez forcé §d§o" + Methods.getName(fPlayer.getOfflineApiPlayer(), true) + " §7a rejoindre la faction §d§o" + faction.getName() + "§7.");
+			});
 		}
 		
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
+		FPlayer fPlayer = FPlayer.getPlayer(player);
 		FactionPlayerJoinEvent event = new FactionPlayerJoinEvent(fPlayer, faction, true);
 		
 		Bukkit.getPluginManager().callEvent(event);
 		if (event.isCancelled()) return false;
 		
 		faction.addMember(fPlayer);
-		faction.broadcast("§d§o" + player.getName() + " §7a rejoint de force la faction !");
+		faction.broadcast("§d§o" + fPlayer.getOfflineApiPlayer().getName() + " §7a rejoint de force la faction !");
 		
 		return true;
 	}
@@ -102,8 +104,10 @@ public class FactionForceJoinArgument extends FactionArgument {
 			completions.addAll(PlayerFaction.getPlayersFaction().values().parallelStream().map(Faction::getName).filter(name -> StringUtil.startsWithIgnoreCase(name, args[1])).collect(Collectors.toList()));
 		
 		for (OfflinePlayer offline : Bukkit.getOfflinePlayers()) {
-			if (StringUtil.startsWithIgnoreCase(offline.getName(), args[1]))
-				completions.add(offline.getName());
+			String name = Methods.getRealName(offline);
+			
+			if (StringUtil.startsWithIgnoreCase(name, args[1]))
+				completions.add(name);
 		}
 		return completions;
 	}

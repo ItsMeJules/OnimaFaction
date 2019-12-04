@@ -10,6 +10,7 @@ import org.bukkit.util.StringUtil;
 
 import net.onima.onimaapi.rank.OnimaPerm;
 import net.onima.onimaapi.utils.JSONMessage;
+import net.onima.onimaapi.utils.Methods;
 import net.onima.onimafaction.commands.faction.FactionArgument;
 import net.onima.onimafaction.faction.Faction;
 import net.onima.onimafaction.faction.PlayerFaction;
@@ -40,7 +41,7 @@ public class FactionPermanentArgument extends FactionArgument {
 		String permanent = faction.isPermanent() ? "§apermanente" : "§cnon permanente";
 		
 		if (faction instanceof PlayerFaction)
-			((PlayerFaction) faction).broadcast("§7Votre faction a été rendue " + permanent + " §7par §d§o" + sender.getName() + "§7.");
+			((PlayerFaction) faction).broadcast("§7Votre faction a été rendue " + permanent + " §7par §d§o" + Methods.getRealName(sender) + "§7.");
 	
 		sender.sendMessage("§d§oVous §7avez rendu la faction §d§o" + faction.getName() + ' ' + permanent + "§7.");
 		return true;

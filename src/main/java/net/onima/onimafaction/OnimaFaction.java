@@ -1,5 +1,8 @@
 package net.onima.onimafaction;
 
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import net.onima.onimaapi.OnimaAPI;
@@ -37,8 +40,9 @@ import net.onima.onimafaction.gui.armorclass.ReaperMenu;
 import net.onima.onimafaction.gui.armorclass.RogueMenu;
 import net.onima.onimafaction.manager.CommandManager;
 import net.onima.onimafaction.manager.ListenerManager;
+import net.onima.onimafaction.players.FPlayer;
 import net.onima.onimafaction.players.OfflineFPlayer;
-import net.onima.onimafaction.task.RegenerationTask;
+import net.onima.onimafaction.task.RegenerationEntryTask;
 import net.onima.onimafaction.task.SecondTask;
 import net.onima.onimafaction.timed.FactionServerEvent;
 import net.onima.onimafaction.timed.event.BattleRoyale;
@@ -57,6 +61,11 @@ public class OnimaFaction extends JavaPlugin {
 	
 	@Override
 	public void onEnable() {
+		if (!Bukkit.getOnlineMode()) {
+			getPluginLoader().disablePlugin(this);
+			return;
+		}
+		
 		long started = System.currentTimeMillis();
 		OnimaAPI.sendConsoleMessage("====================§6[§3ACTIVATION§6]§r====================", ConfigurationService.ONIMAFACTION_PREFIX);
 		instance = this;
@@ -68,8 +77,8 @@ public class OnimaFaction extends JavaPlugin {
 		(listenerManager = new ListenerManager(this)).registerListener();
 		(commandManager = new CommandManager(this)).registerCommands();
 		
-		new RegenerationTask().runTaskTimerAsynchronously(this, 40L, 20L);
-		new SecondTask().runTaskTimerAsynchronously(this, 20L, 20L);
+		RegenerationEntryTask.init(this);
+		new SecondTask().runTaskTimerAsynchronously(this, 40L, 20L);
 		
 		eotw = new EOTW(4 * Time.HOUR, 30 * Time.MINUTE);
 		sotw = new SOTW(3 * Time.HOUR, 15 * Time.MINUTE);
@@ -154,6 +163,26 @@ public class OnimaFaction extends JavaPlugin {
 			return ConfigurationService.NO_FACTION_CHARACTER;
 		
 		return faction.getRelation(viewer.getFaction()).getColor() + faction.getName();
+	}
+	
+	public static boolean hasNearbyEnemies(FPlayer fPlayer, double distance) {
+		PlayerFaction faction = fPlayer.getFaction();
+		Player player = fPlayer.getApiPlayer().toPlayer();
+		
+		for (Entity entity : player.getNearbyEntities(distance, distance, distance)) {
+			if (!(entity instanceof Player))
+				continue;
+			
+			Player target = (Player) entity;
+			
+			if (!target.canSee(player) && !player.canSee(target))
+				continue;
+			
+			if (faction == null || FPlayer.getPlayer(target).getFaction() != faction)
+				return true;
+		}
+		
+		return false;
 	}
 
 }

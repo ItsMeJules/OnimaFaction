@@ -7,7 +7,6 @@ import java.util.List;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.bukkit.util.StringUtil;
 
 import net.onima.onimaapi.rank.OnimaPerm;
@@ -44,7 +43,7 @@ public class FactionDtrArgument extends FactionArgument {
 			for (PlayerFaction faction : PlayerFaction.getPlayersFaction().values())
 				faction.setDTR(dtr, DTRChangeCause.ADMIN);
 			
-			Bukkit.broadcastMessage("§d§o" + sender.getName() + " §7a défini le DTR de toutes les factions sur : §d§o" + dtr);
+			Bukkit.broadcastMessage("§d§o" + Methods.getRealName(sender) + " §7a défini le DTR de toutes les factions sur : §d§o" + dtr);
 			return true;
 		}
 		
@@ -64,7 +63,7 @@ public class FactionDtrArgument extends FactionArgument {
 		Float oldDtr = faction.getDTR();
 		
 		faction.setDTR(dtr, DTRChangeCause.ADMIN);
-		Bukkit.broadcastMessage("§d§o" + sender.getName() + " §7a changé le DTR de §d§o" + faction.getName() + " §7qui était de §d§o" + oldDtr + " §7en §7§o" +faction.getDTR() + "§7.");
+		Bukkit.broadcastMessage("§d§o" + Methods.getRealName(sender) + " §7a changé le DTR de §d§o" + faction.getName() + " §7qui était de §d§o" + oldDtr + " §7en §7§o" +faction.getDTR() + "§7.");
 		return false;
 	}
 	
@@ -85,10 +84,7 @@ public class FactionDtrArgument extends FactionArgument {
 				completions.add(faction.getName());
 		}
 		
-		for (Player online : Bukkit.getOnlinePlayers()) {
-			if (StringUtil.startsWithIgnoreCase(online.getName(), args[1]))
-				completions.add(online.getName());
-		}
+		completions.addAll(super.onTabComplete(sender, cmd, label, args));
 		
 		return completions;
 	}

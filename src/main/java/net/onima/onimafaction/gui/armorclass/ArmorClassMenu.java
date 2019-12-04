@@ -76,7 +76,7 @@ public class ArmorClassMenu extends PacketMenu implements PacketStaticMenu { //T
 		@Override
 		public void click(PacketMenu menu, Player clicker, ItemStack current, InventoryClickEvent event) {
 			event.setCancelled(true);
-			this.menu.open(APIPlayer.getByPlayer(clicker));
+			this.menu.open(APIPlayer.getPlayer(clicker));
 		}
 		
 	}

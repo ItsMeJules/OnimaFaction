@@ -32,7 +32,7 @@ public class FactionCreateArgument extends FactionArgument {
 			return false;
 		
 		Player player = (Player) sender;
-		FPlayer fPlayer = FPlayer.getByUuid(player.getUniqueId());
+		FPlayer fPlayer = FPlayer.getPlayer(player.getUniqueId());
 		String name = args[1];
 		
 		if (fPlayer.hasFaction()) {
@@ -70,7 +70,7 @@ public class FactionCreateArgument extends FactionArgument {
 		Bukkit.getPluginManager().callEvent(event);
 		if (event.isCancelled()) return true;
 		
-		Bukkit.broadcastMessage("§d§o" + player.getName() + " §7a créé la faction §d§o" + event.getName());
+		Bukkit.broadcastMessage(fPlayer.getApiPlayer().getColoredName(true) + " §7a créé la faction §d§o" + event.getName());
 		Bukkit.getPluginManager().callEvent(new FactionCreateEvent(new PlayerFaction(event.getName(), fPlayer), player));
 		return true;
 	}

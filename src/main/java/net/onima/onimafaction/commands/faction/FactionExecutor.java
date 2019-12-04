@@ -62,7 +62,7 @@ public class FactionExecutor extends ArgumentExecutor {
 	private FactionHelpArgument helpArgument;
 
 	public FactionExecutor() {
-		super("faction");
+		super("faction", OnimaPerm.ONIMAFACTION_FACTION_COMMAND);
 		
 		addArgument(new FactionAllyArgument());
 		addArgument(new FactionAnnouncementArgument());

@@ -31,7 +31,7 @@ public class FactionStuckCooldown extends Cooldown implements Listener {
 	public static final Predicate<FPlayer> CAN_F_STUCK;
 
 	static {
-		CAN_F_STUCK = (fPlayer) -> {
+		CAN_F_STUCK = fPlayer -> {
 			Faction factionAt = Claim.getClaimAt(fPlayer.getApiPlayer().toPlayer().getLocation()).getFaction();
 			
 			if (!(factionAt.isWilderness() || factionAt.isRoad() || factionAt.isSafeZone())) {
@@ -63,7 +63,7 @@ public class FactionStuckCooldown extends Cooldown implements Listener {
 	public void onStart(OfflineAPIPlayer offline) {
 		if (offline.isOnline()) {
 			APIPlayer apiPlayer = (APIPlayer) offline;
-			FPlayer fPlayer = FPlayer.getByUuid(offline.getUUID());
+			FPlayer fPlayer = FPlayer.getPlayer(offline.getUUID());
 			
 			if (!isApplicable(fPlayer, CAN_F_STUCK)) {
 				apiPlayer.sendMessage("§cVous pouvez seulement f stuck dans un territoire ennemie ou en WarZone !");
@@ -72,7 +72,7 @@ public class FactionStuckCooldown extends Cooldown implements Listener {
 			}
 			
 			apiPlayer.sendMessage("§d§oVotre §7demande de stuck a commencé. Ne sortez pas du rayon de §d§o" + ConfigurationService.STUCK_RADIUS + " §7block" + (ConfigurationService.STUCK_RADIUS > 1 ? "s" : "") + '.');
-			fPlayer.setStuckRequest(new StuckRequest(apiPlayer.toPlayer().getLocation()));
+			fPlayer.setStuckRequest(new StuckRequest(apiPlayer.toPlayer().getLocation(), fPlayer.getFaction()));
 		}
 		
 		super.onStart(offline);
@@ -82,7 +82,7 @@ public class FactionStuckCooldown extends Cooldown implements Listener {
 	public void onExpire(OfflineAPIPlayer offline) {
 		if (offline.isOnline()) {
 			APIPlayer apiPlayer = (APIPlayer) offline;
-			FPlayer fPlayer = FPlayer.getByUuid(offline.getUUID());
+			FPlayer fPlayer = FPlayer.getPlayer(offline.getUUID());
 			StuckRequest request = fPlayer.getStuckRequest();
 			
 			if (request != null && !request.isNotInRadius(apiPlayer.toPlayer().getLocation())) {
@@ -102,7 +102,7 @@ public class FactionStuckCooldown extends Cooldown implements Listener {
 	@Override
 	public void onCancel(OfflineAPIPlayer offline) {
 		if (offline.isOnline())
-			FPlayer.getByUuid(offline.getUUID()).setStuckRequest(null);
+			FPlayer.getPlayer(offline.getUUID()).setStuckRequest(null);
 		
 		super.onCancel(offline);
 	}
@@ -113,7 +113,7 @@ public class FactionStuckCooldown extends Cooldown implements Listener {
 		
 		if (checkFailed(player.getUniqueId(), event.getTo())) {
 			player.sendMessage("§cVous n'êtes plus dans le rayon de " + ConfigurationService.STUCK_RADIUS + " block" + (ConfigurationService.STUCK_RADIUS > 1 ? "s" : "") + " téléportation annulée !");
-			onCancel(APIPlayer.getByPlayer(player));
+			onCancel(APIPlayer.getPlayer(player));
 		}
 	}
 	
@@ -128,13 +128,13 @@ public class FactionStuckCooldown extends Cooldown implements Listener {
 
 		if (entity instanceof Player && getTimeLeft(entity.getUniqueId()) > 0L) {
 			((Player) entity).sendMessage("§cVous avez reçu des dégâts... Stuck annulée.");
-			onCancel(APIPlayer.getByUuid(entity.getUniqueId()));
+			onCancel(APIPlayer.getPlayer(entity.getUniqueId()));
 		}
 	}
 	
 	@EventHandler
 	public void onQuit(PlayerQuitEvent event) {
-		APIPlayer apiPlayer = APIPlayer.getByPlayer(event.getPlayer());
+		APIPlayer apiPlayer = APIPlayer.getPlayer(event.getPlayer());
 		
 		if (getTimeLeft(apiPlayer.getUUID()) <= 0L)
 			return;
@@ -146,7 +146,7 @@ public class FactionStuckCooldown extends Cooldown implements Listener {
 		if (getTimeLeft(uuid) <= 0L)
 			return false;
 
-		StuckRequest request = FPlayer.getByUuid(uuid).getStuckRequest();
+		StuckRequest request = FPlayer.getPlayer(uuid).getStuckRequest();
 		
 		return request != null && request.isNotInRadius(to);
 	}

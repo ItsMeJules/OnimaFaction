@@ -37,7 +37,7 @@ public class FactionUnclaimArgument extends FactionArgument {
 			return false;
 		
 		Player player = (Player) sender;
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
+		FPlayer fPlayer = FPlayer.getPlayer(player);
 		PlayerFaction faction = null;
 		
 		if ((faction = fPlayer.getFaction()) == null) {
@@ -69,7 +69,7 @@ public class FactionUnclaimArgument extends FactionArgument {
 		boolean plur = claims > 1;
 		
 		JSONMessage jsonMessage = new JSONMessage(
-				"§d§o" + fPlayer.getRole().getRole() + player.getName() + " §7a unclaim §d§o" + claims + " §7territoire" + (plur ? 's' : "") + "§7. Passez votre souris pour plus d'informations.",
+				"§d§o" + fPlayer.getRole().getRole() + fPlayer.getApiPlayer().getName() + " §7a unclaim §d§o" + claims + " §7territoire" + (plur ? 's' : "") + "§7. Passez votre souris pour plus d'informations.",
 				"§6Claim" + (plur ? 's' : "") + " supprimé" + (plur ? 's' : "") + " :\n");
 		
 		for (Claim claim : toUnClaim) {

@@ -2,8 +2,10 @@ package net.onima.onimafaction.listener;
 
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
+import org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result;
 
 import net.onima.onimaapi.players.APIPlayer;
 import net.onima.onimaapi.utils.ConfigurationService;
@@ -15,17 +17,20 @@ import net.onima.onimafaction.players.OfflineFPlayer;
 
 public class DeathbanJoinListener implements Listener {
 	
-	 @EventHandler
+	 @EventHandler(priority = EventPriority.NORMAL)
 	 public void onDeathbanJoin(AsyncPlayerPreLoginEvent event) {
-		 OfflineFPlayer offline = OfflineFPlayer.getByUuid(event.getUniqueId());
+		 OfflineFPlayer offline = OfflineFPlayer.getOfflineFPlayers().get(event.getUniqueId());
 		 
-		 if (offline == null)
+		 if (offline == null) {
+			 event.disallow(Result.KICK_OTHER, ConfigurationService.SQL_ERROR_LOADING_DATA);
 			 return;
+		 }
 		 
 		 Deathban deathban = offline.getDeathban();
 		 
 		 if (deathban != null) {
 			 if (deathban.isActive()) {
+				 
 				 int lives = offline.getLives();
 				 
 				 if (lives > 0) {

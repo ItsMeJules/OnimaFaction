@@ -1,6 +1,5 @@
 package net.onima.onimafaction.commands.faction.arguments;
 
-import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -12,6 +11,7 @@ import net.onima.onimafaction.commands.faction.FactionArgument;
 import net.onima.onimafaction.faction.PlayerFaction;
 import net.onima.onimafaction.faction.struct.Role;
 import net.onima.onimafaction.players.FPlayer;
+import net.onima.onimafaction.players.OfflineFPlayer;
 
 public class FactionColeaderArgument extends FactionArgument {
 	
@@ -24,19 +24,18 @@ public class FactionColeaderArgument extends FactionArgument {
 		role = Role.LEADER;
 	}
 
-	@SuppressWarnings("deprecation")
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		if (checks(sender, args, 2, true))
 			return false;
 		
 		Player player = (Player) sender;
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
+		FPlayer fPlayer = FPlayer.getPlayer(player);
 		PlayerFaction faction = fPlayer.getFaction();
-		OfflinePlayer offline = Bukkit.getOfflinePlayer(args[1]);
+		OfflinePlayer offline = faction.getMember(args[1]);
 		
-		if (!offline.hasPlayedBefore()) {
-			player.sendMessage("§c" + args[2] + " ne s'est jamais connecté sur le serveur !");
+		if (offline == null) {
+			player.sendMessage("§c" + args[1] + " n'est pas dans votre faction !");
 			return false;
 		}
 		
@@ -45,14 +44,17 @@ public class FactionColeaderArgument extends FactionArgument {
 			return false;
 		}
 		
-		if (fPlayer.getRole() == Role.COLEADER) {
-			player.sendMessage("§c" + offline.getName() + " est déjà co-leader de la faction !");
-			return false;
-		}
+		OfflineFPlayer.getPlayer(offline, offlineFPlayer -> {
+			if (offlineFPlayer.getRole() == Role.COLEADER) {
+				player.sendMessage("§c" + offlineFPlayer.getOfflineApiPlayer().getName() + " est déjà co-leader de la faction !");
+				return;
+			}
+			
+			offlineFPlayer.setRole(Role.COLEADER);
+			faction.broadcast("§d§o" + fPlayer.getRole().getRole() + fPlayer.getApiPlayer().getName() + " §7a promu §d§o" + offlineFPlayer.getOfflineApiPlayer().getName() + " §7au rôle de co-leader.");
+		});
 		
-		fPlayer.setRole(Role.COLEADER);
-		faction.broadcast("§d§o" + fPlayer.getRole().getRole() + player.getName() + " §7a promu §d§o" + offline.getName() + " §7au rôle de co-leader.");
-		return false;
+		return true;
 	}
 
 }

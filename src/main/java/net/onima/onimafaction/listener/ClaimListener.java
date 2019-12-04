@@ -48,7 +48,7 @@ public class ClaimListener implements Listener {
 			return;
 		
 		Player player = event.getPlayer();
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
+		FPlayer fPlayer = FPlayer.getPlayer(player);
 		APIPlayer apiPlayer = fPlayer.getApiPlayer();
 		
 		if (action.toString().contains("BLOCK")) {
@@ -194,7 +194,7 @@ public class ClaimListener implements Listener {
 	}
 	
 	private void removeClaimSelection(Player player) {
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
+		FPlayer fPlayer = FPlayer.getPlayer(player);
 		ClaimSelection claimSelection = fPlayer.getClaimSelection();
 		
 		if (claimSelection != null) claimSelection.remove(fPlayer.getApiPlayer());

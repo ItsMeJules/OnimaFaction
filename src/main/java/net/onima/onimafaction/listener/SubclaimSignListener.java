@@ -23,7 +23,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.DoubleChestInventory;
 import org.bukkit.inventory.InventoryHolder;
 
-import net.onima.onimaapi.players.OfflineAPIPlayer;
+import net.onima.onimaapi.caching.UUIDCache;
 import net.onima.onimaapi.signs.HCFSign;
 import net.onima.onimaapi.signs.SubclaimSign;
 import net.onima.onimaapi.utils.ConfigurationService;
@@ -43,7 +43,7 @@ public class SubclaimSignListener implements Listener { //TODO pour un role de l
 		
 		if(block.getState() instanceof Chest) {
 			Player player = event.getPlayer();
-			FPlayer fPlayer = FPlayer.getByPlayer(player);
+			FPlayer fPlayer = FPlayer.getPlayer(player);
 			SubclaimSign subSign = SubclaimSign.fromLocation(block.getLocation());
 			
 			if (subSign != null && (!subSign.getOwners().contains(player.getUniqueId()) || fPlayer.getRole().isAtMost(Role.COLEADER))) {
@@ -71,7 +71,7 @@ public class SubclaimSignListener implements Listener { //TODO pour un role de l
 			return;
 		
 		Chest chest = (Chest) attached.getState();
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
+		FPlayer fPlayer = FPlayer.getPlayer(player);
 		
 		if(!fPlayer.hasFaction()) {
 			player.sendMessage("§cVous avez besoin d'une faction pour créer un coffre privé.");
@@ -102,7 +102,7 @@ public class SubclaimSignListener implements Listener { //TODO pour un role de l
 		}
 		
 		SubclaimSign sign = new SubclaimSign((Sign) block.getState(), chest);
-		sign.setOwners(ownersList.stream().map(str -> {return OfflineAPIPlayer.getByName(str);}).filter(offline -> offline != null).map(OfflineAPIPlayer::getUUID).collect(Collectors.toCollection(() -> new ArrayList<>(3))));
+		sign.setOwners(ownersList.stream().map(str -> {return UUIDCache.getUUID(str);}).filter(uuid -> uuid != null).collect(Collectors.toCollection(() -> new ArrayList<>(3))));
 		
 		InventoryHolder holder = chest.getInventory().getHolder();
 		
@@ -130,7 +130,7 @@ public class SubclaimSignListener implements Listener { //TODO pour un role de l
 			return;
 		
 		SubclaimSign sign = SubclaimSign.fromLocation(block.getLocation());
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
+		FPlayer fPlayer = FPlayer.getPlayer(player);
 		
 		if (sign != null) {
 			if (fPlayer.getRole().isAtMost(Role.COLEADER) && !sign.getOwners().contains(player.getUniqueId()) && !fPlayer.hasFactionBypass()) {

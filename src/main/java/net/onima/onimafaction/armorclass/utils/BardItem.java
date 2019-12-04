@@ -19,7 +19,6 @@ import net.onima.onimaapi.zone.struct.Flag;
 import net.onima.onimaapi.zone.type.Region;
 import net.onima.onimafaction.armorclass.Bard;
 import net.onima.onimafaction.faction.PlayerFaction;
-import net.onima.onimafaction.faction.claim.Claim;
 import net.onima.onimafaction.players.FPlayer;
 
 public class BardItem implements Saver {
@@ -45,7 +44,7 @@ public class BardItem implements Saver {
 
 	public BardItemUseFinality use(Bard bard, boolean isClick, boolean notify) {	
 		FPlayer fPlayer = bard.getFPlayer();
-		Region region = Claim.getClaimAndRegionAt(fPlayer.getApiPlayer().toPlayer().getLocation());
+		Region region = fPlayer.getRegionOn();
 		Player player = fPlayer.getApiPlayer().toPlayer();
 		
 		if (region.hasFlag(Flag.NO_BARDING)) {
@@ -78,7 +77,7 @@ public class BardItem implements Saver {
 					if(!(nearbyEntity instanceof Player)) continue;
 					
 					Player target = (Player) nearbyEntity;
-					boolean inFaction = faction.getMembers().contains(target.getUniqueId());
+					boolean inFaction = faction.getMembers().containsKey(target.getUniqueId());
 					
 					if (!debuff) {
 						if (inFaction) 
@@ -96,7 +95,6 @@ public class BardItem implements Saver {
 				}
 			}
 			
-			int affected = targets.size();
 			String effectNiceName = ConfigurationService.EFFECTS_NICE_NAME.get(effect.getType()), time = IntegerTime.setYMDWHMSFormat(effect.getDuration() / 20 * 1000);
 			int amplifier = effect.getAmplifier();
 			
@@ -105,7 +103,7 @@ public class BardItem implements Saver {
 				player.sendMessage(name + " §eutilisé :\n" 
 						+ " §e» §7Effet : §6" + effectNiceName + ' ' + Methods.toRomanNumber(amplifier + 1) + " §7pour §6" + time + "§7.\n"
 						+ " §e» §7Coût en énergie : §6" + power + "§7.\n"
-						+ " §e» §7Joueurs affectés : §c" + affected);
+						+ " §e» §7Joueurs affectés : §c" + targets.size());
 				bard.removePower(power);
 				Methods.removeOneItem(player);
 			}
@@ -184,11 +182,11 @@ public class BardItem implements Saver {
 	}
 	
 	public static BardItem fromName(String id) {
-		return bardItems.parallelStream().filter(buff -> buff.id.equalsIgnoreCase(id)).findFirst().orElse(null);
+		return bardItems.stream().filter(buff -> buff.id.equalsIgnoreCase(id)).findFirst().orElse(null);
 	}
 	
 	public static BardItem fromItemStack(ItemStack itemStack) {
-		return bardItems.parallelStream().filter(buff -> Methods.isSimilar(buff.itemStack, itemStack)).findFirst().orElse(null);
+		return bardItems.stream().filter(buff -> Methods.isSimilar(buff.itemStack, itemStack)).findFirst().orElse(null);
 	}
 
 	public static enum BardItemUseFinality {

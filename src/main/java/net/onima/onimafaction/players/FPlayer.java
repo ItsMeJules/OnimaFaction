@@ -15,12 +15,14 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.potion.PotionEffect;
 
 import net.onima.onimaapi.fakeblock.FakeBlock;
 import net.onima.onimaapi.fakeblock.FakeBlockData;
 import net.onima.onimaapi.fakeblock.FakeType;
 import net.onima.onimaapi.players.APIPlayer;
+import net.onima.onimaapi.utils.CombatLogger;
 import net.onima.onimaapi.utils.ConfigurationService;
 import net.onima.onimaapi.utils.Methods;
 import net.onima.onimaapi.zone.struct.Flag;
@@ -274,21 +276,46 @@ public class FPlayer extends OfflineFPlayer {
 		
 		return blocks;
 	}
+	
+	public void spawnCombatLogger() {
+		CombatLogger logger = new CombatLogger(apiPlayer.toPlayer().getLocation(), ConfigurationService.COMBAT_LOGGER_NAME.replace("%player%", apiPlayer.getColoredName(false)), apiPlayer.getUUID());
+		PlayerInventory inventory = apiPlayer.toPlayer().getInventory();
+		
+		if (playerFaction != null)
+			logger.getTeamMates().addAll(playerFaction.getMembersUUID());
+		else
+			logger.getTeamMates().add(apiPlayer.getUUID());
+		
+		logger.setItems(inventory.getArmorContents(), inventory.getContents());
+		logger.setExperience(apiPlayer.getExperienceManager().getCurrentExp());
+		logger.spawn();
+	}
+	
+	@Override
+	public void save() {
+		players.put(apiPlayer.getUUID(), this);
+	}
+	
+	@Override
+	public void remove() {
+		super.remove();
+		players.remove(apiPlayer.getUUID());
+	}
 
-	public static FPlayer getByUuid(UUID uuid) {
+	public static FPlayer getPlayer(UUID uuid) {
 		return players.get(uuid);
 	}
 	
-	public static FPlayer getByName(String name) {
+	public static FPlayer getPlayer(String name) {
 		Player online = Bukkit.getPlayer(name);
 		
 		if (online == null)
 			return null;
 		else
-			return getByUuid(online.getUniqueId());
+			return getPlayer(online.getUniqueId());
 	}
 	
-	public static FPlayer getByPlayer(Player player) {
+	public static FPlayer getPlayer(Player player) {
 		return players.get(player.getUniqueId());
 	}
 	
@@ -299,5 +326,5 @@ public class FPlayer extends OfflineFPlayer {
 	public static Collection<FPlayer> getOnlineFPlayers() {
 		return players.values();
 	}
-	
+
 }

@@ -29,7 +29,7 @@ public class ReaperPowerCooldown extends Cooldown {
 	@Override
 	public void onExpire(OfflineAPIPlayer offline) {
 		if (offline.isOnline()) { 
-			Reaper reaper = (Reaper) FPlayer.getByUuid(offline.getUUID()).getArmorClass(Reaper.class);
+			Reaper reaper = (Reaper) FPlayer.getPlayer(offline.getUUID()).getArmorClass(Reaper.class);
 			
 			if (reaper.isActivated())
 				reaper.start(ReaperStage.PASSIVE_MODE);

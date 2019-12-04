@@ -41,7 +41,7 @@ public class FactionAllyArgument extends FactionArgument {
 			return false;
 		
 		Player player = (Player) sender;
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
+		FPlayer fPlayer = FPlayer.getPlayer(player);
 		PlayerFaction faction = null;
 		
 		if ((faction = fPlayer.getFaction()) == null) {
@@ -102,7 +102,7 @@ public class FactionAllyArgument extends FactionArgument {
 		}
 		
 		if (faction.getRequestedRelations().putIfAbsent(targetFaction.getName(), Relation.ALLY) == null) {
-			faction.broadcast(new JSONMessage("§d§o" + player.getName() + " §7a envoyé une demande d'alliance à §d§o" + targetFaction.getName(), "§7Cliquez ici pour annuler cette alliance avec §d§o" + targetFaction.getName() + "§7.", true, "/f unally " + targetFaction.getName()));
+			faction.broadcast(new JSONMessage("§d§o" + fPlayer.getApiPlayer().getName() + " §7a envoyé une demande d'alliance à §d§o" + targetFaction.getName(), "§7Cliquez ici pour annuler cette alliance avec §d§o" + targetFaction.getName() + "§7.", true, "/f unally " + targetFaction.getName()));
 			targetFaction.broadcast(new JSONMessage("§d§o" + faction.getName() + " §7souhaite être votre allié. §7§oCliquez sur le message pour accepter.", "§7Cliquez ici pour vous allier avec §d§o" + faction.getName() + "§7.", true, "/f ally " + faction.getName()));
 			return true;
 		}
@@ -117,7 +117,7 @@ public class FactionAllyArgument extends FactionArgument {
 			return Collections.emptyList();
 		
 		Player player = (Player) sender;
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
+		FPlayer fPlayer = FPlayer.getPlayer(player);
 		
 		if (fPlayer.hasFaction()) {
 			PlayerFaction faction = fPlayer.getFaction();

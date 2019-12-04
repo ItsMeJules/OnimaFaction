@@ -16,10 +16,11 @@ import net.onima.onimaapi.OnimaAPI;
 import net.onima.onimaapi.commands.SocialSpyCommand;
 import net.onima.onimaapi.event.chat.PrivateMessageEvent;
 import net.onima.onimaapi.players.APIPlayer;
-import net.onima.onimaapi.players.PlayerOption;
+import net.onima.onimaapi.players.utils.PlayerOption;
 import net.onima.onimaapi.rank.OnimaPerm;
 import net.onima.onimaapi.rank.RankType;
 import net.onima.onimaapi.utils.ConfigurationService;
+import net.onima.onimaapi.utils.Methods;
 import net.onima.onimaapi.utils.PrivateMessage;
 import net.onima.onimafaction.commands.faction.arguments.staff.FactionChatSpyArgument;
 import net.onima.onimafaction.events.FactionChatEvent;
@@ -52,7 +53,30 @@ public class StaffListener implements Listener {
 		if (SocialSpyCommand.isConsoleSpying())
 			spies.add(Bukkit.getConsoleSender());
 		
-		String format = PrivateMessage.spyFormat(message, sender.getName(), receiver.getName(), RankType.getRank(sender), RankType.getRank(receiver));
+		RankType senderRank = RankType.CONSOLE, receiverRank = RankType.CONSOLE;
+		boolean senderDisguised = false, receiverDisguised = false;
+		
+		if (sender instanceof Player) {
+			APIPlayer apiPlayer = APIPlayer.getPlayer((Player) sender);
+
+			if (apiPlayer.getDisguiseManager().isDisguised()) {
+				senderRank = apiPlayer.getDisguiseManager().getRankType();
+				senderDisguised = true;
+			} else
+				senderRank = apiPlayer.getRank().getRankType();
+		}
+		
+		if (receiver instanceof Player) {
+			APIPlayer apiPlayer = APIPlayer.getPlayer((Player) receiver);
+			
+			if (apiPlayer.getDisguiseManager().isDisguised()) {
+				receiverRank = apiPlayer.getDisguiseManager().getRankType();
+				receiverDisguised = true;
+			} else
+				receiverRank = apiPlayer.getRank().getRankType();	
+		}
+		
+		String format = PrivateMessage.spyFormat(senderDisguised, receiverDisguised, message, Methods.getName(sender, true), Methods.getName(receiver, true), senderRank, receiverRank);
 		
 		if (!OnimaPerm.CHAT_FILTER_BYPASS.has(event.getSender()) && OnimaAPI.getInstance().getChatManager().shouldFilter(message)) {
 			if (spies.removeIf(spy -> OnimaPerm.CHAT_FILTER_BYPASS.has(spy)))
@@ -71,7 +95,7 @@ public class StaffListener implements Listener {
 		Player sender = (Player) event.getSender();
 		PlayerFaction faction = event.getFaction();
 		String message = event.getMessage();
-		String format = "§7(" + event.getChat().getChat() + "§7) " + " §e§o[§d§o" + (faction == null ? ConfigurationService.NO_FACTION_CHARACTER : faction.getName()) + "§e§o] " + APIPlayer.getByPlayer(sender).getRank().getRankType().getNameColor() + sender.getName() + "§r: " + message;
+		String format = "§7(" + event.getChat().getChat() + "§7) " + " §e§o[§d§o" + (faction == null ? ConfigurationService.NO_FACTION_CHARACTER : faction.getName()) + "§e§o] " + APIPlayer.getPlayer(sender).getDisplayName(true) + "§r: " + message;
 		
 		if (event.getChat() == Chat.GLOBAL) {
 			if (!OnimaPerm.CHAT_FILTER_BYPASS.has(event.getSender()) && OnimaAPI.getInstance().getChatManager().shouldFilter(message))
@@ -92,7 +116,7 @@ public class StaffListener implements Listener {
 		}
 
 		for (CommandSender spier : mightSpy) {
-			List<String> spying = spier instanceof ConsoleCommandSender ? FactionChatSpyArgument.getConsoleSpies() : FPlayer.getByPlayer((Player) spier).getFactionSpying();
+			List<String> spying = spier instanceof ConsoleCommandSender ? FactionChatSpyArgument.getConsoleSpies() : FPlayer.getPlayer((Player) spier).getFactionSpying();
 			
 			if (spying.contains("all") || spying.contains(faction.getName()))
 				spier.sendMessage("§7§o(Spy) " + format);

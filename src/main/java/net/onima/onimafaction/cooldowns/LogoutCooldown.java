@@ -42,7 +42,7 @@ public class LogoutCooldown extends Cooldown implements Listener {
 		if (offline.isOnline()) {
 			APIPlayer apiPlayer = (APIPlayer) offline;
 			
-			if (FPlayer.getByUuid(apiPlayer.getUUID()).getRegionOn().hasFlag(Flag.SAFE_DISCONNECT))
+			if (FPlayer.getPlayer(apiPlayer.getUUID()).getRegionOn().hasFlag(Flag.SAFE_DISCONNECT))
 				onExpire(offline);
 			else
 				apiPlayer.sendMessage("§aDéconnexion en cours, veuillez ne pas bouger et ne pas prendre de dégâts...");
@@ -65,7 +65,7 @@ public class LogoutCooldown extends Cooldown implements Listener {
 	
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 	public void onPlayerMove(PlayerMoveEvent event) {
-		APIPlayer apiPlayer = APIPlayer.getByPlayer(event.getPlayer());
+		APIPlayer apiPlayer = APIPlayer.getPlayer(event.getPlayer());
 
 		if (apiPlayer.hasMovedOneBlockTo(event.getTo()) && getTimeLeft(apiPlayer.getUUID()) > 0L) {
 			apiPlayer.sendMessage("§cVous avez bougé, déconnexion annulée !");
@@ -83,7 +83,7 @@ public class LogoutCooldown extends Cooldown implements Listener {
 		UUID uuid = event.getPlayer().getUniqueId();
 
 		if (getTimeLeft(event.getPlayer().getUniqueId()) > 0L)
-			onCancel(OfflineAPIPlayer.getByUuid(uuid));
+			onCancel(APIPlayer.getPlayer(uuid));
 	}
 	
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
@@ -92,7 +92,7 @@ public class LogoutCooldown extends Cooldown implements Listener {
 
 		if (entity instanceof Player && getTimeLeft(entity.getUniqueId()) > 0L) {
 			((Player) entity).sendMessage("§cVous avez reçu des dégâts, déconnextion annulée !");
-			onCancel(APIPlayer.getByUuid(entity.getUniqueId()));
+			onCancel(APIPlayer.getPlayer(entity.getUniqueId()));
 		}
 	}
 	

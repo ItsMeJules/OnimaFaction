@@ -7,13 +7,14 @@ import net.onima.onimafaction.OnimaFaction;
 import net.onima.onimafaction.listener.ArmorClassListener;
 import net.onima.onimafaction.listener.BardListener;
 import net.onima.onimafaction.listener.ClaimListener;
+import net.onima.onimafaction.listener.CombatLoggerListener;
 import net.onima.onimafaction.listener.DeathListener;
 import net.onima.onimafaction.listener.DeathbanJoinListener;
+import net.onima.onimafaction.listener.EggAdvantageListener;
 import net.onima.onimafaction.listener.EntityListener;
 import net.onima.onimafaction.listener.EnvironementListener;
 import net.onima.onimafaction.listener.MineurListener;
 import net.onima.onimafaction.listener.ModListener;
-import net.onima.onimafaction.listener.PlayerSetupListener;
 import net.onima.onimafaction.listener.ProtectionListener;
 import net.onima.onimafaction.listener.ReaperListener;
 import net.onima.onimafaction.listener.RegionBorderListener;
@@ -40,7 +41,6 @@ public class ListenerManager {
 	}
 	
 	public void registerListener() {
-		pm.registerEvents(new PlayerSetupListener(), plugin);
 		pm.registerEvents(new RegionListener(), plugin);
 		pm.registerEvents(new ClaimListener(), plugin);
 		pm.registerEvents(new EnvironementListener(), plugin);
@@ -61,6 +61,8 @@ public class ListenerManager {
 		pm.registerEvents(new PortalTrapFixListener(), plugin);
 		pm.registerEvents(new DeathbanJoinListener(), plugin);
 		pm.registerEvents(new WorlChangerListener(), plugin);
+		pm.registerEvents(new EggAdvantageListener(), plugin);
+		pm.registerEvents(new CombatLoggerListener(), plugin);
 	}
 	
 }

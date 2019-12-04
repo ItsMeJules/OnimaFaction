@@ -77,7 +77,7 @@ public class EnvironementListener implements Listener {
 				SupplyCrate crate = null;
 				
 				if ((crate = SupplyCrate.getDroppedByLocation(block.getLocation())) != null) {
-					crate.open(APIPlayer.getByPlayer(player), Crate.NO_BOOSTER);
+					crate.open(APIPlayer.getPlayer(player), Crate.NO_BOOSTER);
 					canBuild = 1;
 				}
 			}
@@ -257,7 +257,7 @@ public class EnvironementListener implements Listener {
 			player = (Player) entity;
 		else return -2;
 		
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
+		FPlayer fPlayer = FPlayer.getPlayer(player);
 		
 		if (fPlayer.hasFactionBypass()) return 1;
 		if (location.getWorld().getEnvironment() == Environment.THE_END) return 0;

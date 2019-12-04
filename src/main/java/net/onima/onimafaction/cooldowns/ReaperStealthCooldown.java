@@ -32,7 +32,7 @@ public class ReaperStealthCooldown extends Cooldown implements Listener {
 	@Override
 	public void onExpire(OfflineAPIPlayer offline) {
 		if (offline.isOnline()) {
-			Reaper reaper = (Reaper) FPlayer.getByUuid(offline.getUUID()).getArmorClass(Reaper.class);
+			Reaper reaper = (Reaper) FPlayer.getPlayer(offline.getUUID()).getArmorClass(Reaper.class);
 			
 			if (reaper.isActivated())
 				reaper.start(ReaperStage.POWER_MODE);
@@ -44,7 +44,7 @@ public class ReaperStealthCooldown extends Cooldown implements Listener {
 	@EventHandler
 	public void onInteract(PlayerInteractEvent event) {
 		if (event.getAction().toString().contains("RIGHT") && event.hasItem() && Reaper.REAPER_BUFF.getItemStack().isSimilar(event.getItem())) {
-			Reaper reaper = (Reaper) FPlayer.getByPlayer(event.getPlayer()).getArmorClass(Reaper.class);
+			Reaper reaper = (Reaper) FPlayer.getPlayer(event.getPlayer()).getArmorClass(Reaper.class);
 			
 			if (reaper.isActivated())
 				reaper.start(ReaperStage.STEALTH_MODE);

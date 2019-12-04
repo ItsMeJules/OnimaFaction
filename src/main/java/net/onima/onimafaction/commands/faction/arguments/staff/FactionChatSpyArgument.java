@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
@@ -21,7 +19,7 @@ import net.onima.onimaapi.utils.Methods;
 import net.onima.onimafaction.commands.faction.FactionArgument;
 import net.onima.onimafaction.faction.Faction;
 import net.onima.onimafaction.faction.PlayerFaction;
-import net.onima.onimafaction.players.OfflineFPlayer;
+import net.onima.onimafaction.players.FPlayer;
 
 public class FactionChatSpyArgument extends FactionArgument {
 	
@@ -44,7 +42,7 @@ public class FactionChatSpyArgument extends FactionArgument {
 		if (checks(sender, args, 2, true))
 			return false;
 		
-		List<String> spies = (sender instanceof ConsoleCommandSender) ? consoleSpies : OfflineFPlayer.getByOfflinePlayer((OfflinePlayer) sender).getFactionSpying();
+		List<String> spies = (sender instanceof ConsoleCommandSender) ? consoleSpies : FPlayer.getPlayer((Player) sender).getFactionSpying();
 				
 		if (args[1].equalsIgnoreCase("list")) {
 			if (spies.isEmpty()) {
@@ -113,7 +111,7 @@ public class FactionChatSpyArgument extends FactionArgument {
 			return Collections.emptyList();
 		
 		List<String> completions = new ArrayList<>();
-		List<String> spies = (sender instanceof ConsoleCommandSender) ? consoleSpies : OfflineFPlayer.getByOfflinePlayer((OfflinePlayer) sender).getFactionSpying();
+		List<String> spies = (sender instanceof ConsoleCommandSender) ? consoleSpies : FPlayer.getPlayer((Player) sender).getFactionSpying();
 		
 		if (StringUtil.startsWithIgnoreCase("all", args[1]))
 			completions.add("all");
@@ -129,11 +127,7 @@ public class FactionChatSpyArgument extends FactionArgument {
 					completions.add(faction.getName());
 			}
 			
-			for (Player online : Bukkit.getOnlinePlayers()) {
-				if (StringUtil.startsWithIgnoreCase(online.getName(), args[1]))
-					completions.add(online.getName());
-			}
-			
+			completions.addAll(super.onTabComplete(sender, cmd, label, args));
 		}
 		
 		return completions;

@@ -33,7 +33,7 @@ public class FactionDepositArgument extends FactionArgument {
 			return false;
 		
 		Player player = (Player) sender;
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
+		FPlayer fPlayer = FPlayer.getPlayer(player);
 		PlayerFaction faction = null;
 		
 		if ((faction = fPlayer.getFaction()) == null) {
@@ -62,7 +62,7 @@ public class FactionDepositArgument extends FactionArgument {
 		if (amount > 0) {
 			balance.removeAmount(amount);
 			faction.addMoney(amount);
-			faction.broadcast("§d§o" + fPlayer.getRole().getRole() + player.getName() + " §7a déposé §d§o" + amount + ConfigurationService.MONEY_SYMBOL + " §7dans la banque de la faction.");
+			faction.broadcast("§d§o" + fPlayer.getRole().getRole() + fPlayer.getApiPlayer().getName() + " §7a déposé §d§o" + amount + ConfigurationService.MONEY_SYMBOL + " §7dans la banque de la faction.");
 		} else {
 			player.sendMessage("§cQu'est-ce tu veux faire ? Niquer la matrice ? Non dsl frérot tu peux pas déposer un montant négatif.");
 			return false;

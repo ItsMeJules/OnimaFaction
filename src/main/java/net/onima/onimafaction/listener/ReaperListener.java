@@ -18,7 +18,7 @@ public class ReaperListener implements Listener {
 	public void onDamage(EntityDamageEvent event) {
 		if (event.getEntity() instanceof Player) {
 			Player player = (Player) event.getEntity();
-			Reaper reaper = (Reaper) FPlayer.getByPlayer(player).getArmorClass(Reaper.class);
+			Reaper reaper = (Reaper) FPlayer.getPlayer(player).getArmorClass(Reaper.class);
 			
 			if (reaper.isActivated() && reaper.getReaperStage() == ReaperStage.STEALTH_MODE) {
 				for (Entity entity : player.getNearbyEntities(Reaper.STEALTH_DAMAGE_ALERT_RADIUS, Reaper.STEALTH_DAMAGE_ALERT_RADIUS, Reaper.STEALTH_DAMAGE_ALERT_RADIUS)) {
@@ -38,7 +38,7 @@ public class ReaperListener implements Listener {
 			
 			if (attacker == null || attacker.equals(entity)) return;
 			
-			Reaper reaper = (Reaper) FPlayer.getByPlayer(attacker).getArmorClass(Reaper.class);
+			Reaper reaper = (Reaper) FPlayer.getPlayer(attacker).getArmorClass(Reaper.class);
 			
 			if (reaper.isActivated() && reaper.getReaperStage() == ReaperStage.STEALTH_MODE)
 				reaper.start(ReaperStage.POWER_MODE, true);

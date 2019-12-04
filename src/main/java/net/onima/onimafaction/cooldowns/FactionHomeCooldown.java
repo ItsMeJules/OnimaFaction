@@ -18,6 +18,7 @@ import net.onima.onimaapi.players.OfflineAPIPlayer;
 import net.onima.onimaapi.utils.OEffect;
 import net.onima.onimaapi.utils.time.Time;
 import net.onima.onimaapi.utils.time.Time.LongTime;
+import net.onima.onimafaction.players.FPlayer;
 import net.onima.onimafaction.players.OfflineFPlayer;
 
 public class FactionHomeCooldown extends Cooldown implements Listener {
@@ -55,11 +56,11 @@ public class FactionHomeCooldown extends Cooldown implements Listener {
 	
 	@Override
 	public void onExpire(OfflineAPIPlayer offline) {
-		OfflineFPlayer offlineF = null;
+		FPlayer onlineF = null;
 		
-		if (offline.isOnline() && HAS_HOME.apply(offlineF = OfflineFPlayer.getByUuid(offline.getUUID()))) {
+		if (offline.isOnline() && HAS_HOME.apply(onlineF = FPlayer.getPlayer(offline.getUUID()))) {
 			APIPlayer apiPlayer = (APIPlayer) offline;
-			Location location = offlineF.getFaction().getHome();
+			Location location = onlineF.getFaction().getHome();
 			
 			location.getChunk();
 			apiPlayer.toPlayer().teleport(location);
@@ -75,7 +76,7 @@ public class FactionHomeCooldown extends Cooldown implements Listener {
 		if (getTimeLeft(event.getPlayer().getUniqueId()) <= 0L)
 			return;
 		
-		APIPlayer apiPlayer = APIPlayer.getByPlayer(event.getPlayer());
+		APIPlayer apiPlayer = APIPlayer.getPlayer(event.getPlayer());
 		
 		if (apiPlayer.hasMovedOneBlockTo(event.getTo())) {
 			onCancel(apiPlayer);
@@ -85,7 +86,7 @@ public class FactionHomeCooldown extends Cooldown implements Listener {
 	
 	@EventHandler
 	public void onQuit(PlayerQuitEvent event) {
-		APIPlayer apiPlayer = APIPlayer.getByPlayer(event.getPlayer());
+		APIPlayer apiPlayer = APIPlayer.getPlayer(event.getPlayer());
 		
 		if (getTimeLeft(apiPlayer.getUUID()) <= 0L)
 			return;
@@ -99,7 +100,7 @@ public class FactionHomeCooldown extends Cooldown implements Listener {
 
 		if (entity instanceof Player && getTimeLeft(entity.getUniqueId()) > 0L) {
 			((Player) entity).sendMessage("§cVous avez reçu des dégâts... Téléportation annulée.");
-			onCancel(APIPlayer.getByUuid(entity.getUniqueId()));
+			onCancel(APIPlayer.getPlayer(entity.getUniqueId()));
 		}
 	}
 	

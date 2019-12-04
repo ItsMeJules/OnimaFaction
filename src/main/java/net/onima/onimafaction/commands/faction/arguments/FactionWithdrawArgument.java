@@ -35,7 +35,7 @@ public class FactionWithdrawArgument extends FactionArgument {
 			return false;
 		
 		Player player = (Player) sender;
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
+		FPlayer fPlayer = FPlayer.getPlayer(player);
 		PlayerFaction faction = null;
 		
 		if ((faction = fPlayer.getFaction()) == null) {
@@ -63,7 +63,7 @@ public class FactionWithdrawArgument extends FactionArgument {
 		if (amount > 0) {
 			faction.removeMoney(amount);
 			fPlayer.getApiPlayer().getBalance().addAmount(amount);
-			faction.broadcast("§d§o" + fPlayer.getRole().getRole() + player.getName() + " §7a retiré §d§o" + amount + ConfigurationService.MONEY_SYMBOL + " §7de la banque de la faction.");
+			faction.broadcast("§d§o" + fPlayer.getRole().getRole() + fPlayer.getApiPlayer().getName() + " §7a retiré §d§o" + amount + ConfigurationService.MONEY_SYMBOL + " §7de la banque de la faction.");
 		} else {
 			player.sendMessage("§cQu'est-ce tu veux faire ? Niquer la matrice ? Non dsl frérot tu peux pas retirer un montant négatif.");
 			return false;

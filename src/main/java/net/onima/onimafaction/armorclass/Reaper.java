@@ -53,7 +53,7 @@ public class Reaper extends ArmorClass {
 			
 			@Override
 			public boolean action(Player player) {
-				APIPlayer apiPlayer = APIPlayer.getByUuid(player.getUniqueId());
+				APIPlayer apiPlayer = APIPlayer.getPlayer(player.getUniqueId());
 
 				if (apiPlayer.getTimeLeft(ReaperModeCooldown.class) > 0L)
 					return false;
@@ -67,7 +67,7 @@ public class Reaper extends ArmorClass {
 					useSound.play(loc);
 					
 					for (APIPlayer online : APIPlayer.getOnlineAPIPlayers()) {
-						if (!online.getRank().getRankType().hasPermission(OnimaPerm.ONIMAAPI_VANISH_COMMAND))
+						if (!OnimaPerm.ONIMAAPI_VANISH_COMMAND.has(online.toPlayer()))
 							online.toPlayer().hidePlayer(player);
 					}
 					
@@ -142,8 +142,13 @@ public class Reaper extends ArmorClass {
 	
 	private ReaperStage reaperStage;
 	
+	{
+		reaperStage = ReaperStage.PASSIVE_MODE;
+	}
+	
 	public Reaper(FPlayer fPlayer) {
 		super(fPlayer);
+		
 		classType = new ReaperArmor();
 	}
 	
@@ -236,7 +241,7 @@ public class Reaper extends ArmorClass {
 			circleParticles(1, 1, 0.1, loc.clone().add(0, 1.75, 0));
 			
 			for (Player online : Bukkit.getOnlinePlayers()) {
-				if (!online.canSee(player) && !apiPlayer.getRank().getRankType().hasPermission(OnimaPerm.ONIMAAPI_VANISH_COMMAND))
+				if (!online.canSee(player) && !OnimaPerm.ONIMAAPI_VANISH_COMMAND.has(player))
 					online.showPlayer(player);
 			}
 			

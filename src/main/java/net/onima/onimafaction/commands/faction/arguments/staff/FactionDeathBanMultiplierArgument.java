@@ -45,7 +45,7 @@ public class FactionDeathBanMultiplierArgument extends FactionArgument {
 		}
 		
 		sender.sendMessage("§d§oVous §7avez défini le deathban multiplier de §d§o" + faction.getName() + " §7sur §d§o" + multiplier + "§7.");
-		if (faction instanceof PlayerFaction) ((PlayerFaction) faction).broadcast("§d§o" + sender.getName() + " §7a défini le deathban multiplier de §d§ovotre §7faction sur §d§o" + multiplier + "§7.");
+		if (faction instanceof PlayerFaction) ((PlayerFaction) faction).broadcast("§d§o" + Methods.getRealName(sender) + " §7a défini le deathban multiplier de §d§ovotre §7faction sur §d§o" + multiplier + "§7.");
 		faction.getClaims().parallelStream().forEach(claim -> claim.setDeathbanMultiplier(multiplier));
 		return true;
 	}

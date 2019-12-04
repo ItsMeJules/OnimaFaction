@@ -75,7 +75,7 @@ public class FactionListArgument extends FactionArgument {
 			}
 			
 			if (index <= MAX_FACTION_PER_PAGE) {
-				list.add(faction.jsonHoverTooltip(viewer, index + 1).build());
+				list.add(faction.jsonHoverTooltip(viewer, index).build());
 				index++;
 			}
 		}

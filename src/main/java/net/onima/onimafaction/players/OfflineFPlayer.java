@@ -7,18 +7,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.bson.Document;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
+import net.onima.onimaapi.caching.UUIDCache;
+import net.onima.onimaapi.event.mongo.AbstractPlayerLoadEvent;
+import net.onima.onimaapi.mongo.api.result.MongoQueryResult;
 import net.onima.onimaapi.players.OfflineAPIPlayer;
-import net.onima.onimaapi.sql.api.query.QueryResult;
-import net.onima.onimaapi.sql.api.table.Row;
-import net.onima.onimafaction.armorclass.ArmorClass;
+import net.onima.onimaapi.saver.mongo.NoSQLSaver;
+import net.onima.onimaapi.utils.Methods;
+import net.onima.onimaapi.utils.callbacks.VoidCallback;
 import net.onima.onimafaction.faction.PlayerFaction;
 import net.onima.onimafaction.faction.struct.Chat;
 import net.onima.onimafaction.faction.struct.Role;
 
-public class OfflineFPlayer {
+public class OfflineFPlayer implements NoSQLSaver {
 	
 	protected static Map<UUID, OfflineFPlayer> offlineFPlayers;
 	
@@ -33,7 +37,6 @@ public class OfflineFPlayer {
 	protected List<String> factionSpying;
 	protected Deathban deathban;
 	protected PlayerFaction playerFaction;
-	protected ArmorClass[] armorClasses;
 	protected int lives;
 	
 	{
@@ -52,23 +55,19 @@ public class OfflineFPlayer {
 	}
 	
 	private void transferInstance(UUID uuid) {
-		OfflineFPlayer old = getByUuid(uuid);
-		
-		if (old == null) return;
-		
-		fMap = old.fMap;
-		factionBypass = old.factionBypass;
-		role = old.role;
-		chat = old.chat;
-		factionSpying = old.factionSpying;
-		deathban = old.deathban;
-		playerFaction = old.playerFaction;
-	}
-	
-	public void load(QueryResult<UUID> result) {
-		Row row = result.getResults();
-		
-		playerFaction = row.getValue("player_faction", PlayerFaction.class);
+		getPlayer(uuid, old -> {
+			if (old == null)
+				return;
+			
+			fMap = old.fMap;
+			factionBypass = old.factionBypass;
+			role = old.role;
+			chat = old.chat;
+			factionSpying = old.factionSpying;
+			deathban = old.deathban;
+			playerFaction = old.playerFaction;
+			
+		});
 	}
 	
 	public OfflineAPIPlayer getOfflineApiPlayer() {
@@ -121,7 +120,9 @@ public class OfflineFPlayer {
 
 	public void setDeathban(Deathban deathban) {
 		this.deathban = deathban;
-		deathban.ban();
+		
+		if (deathban != null)
+			deathban.ban();
 	}
 	
 	public boolean hasFaction() {
@@ -151,24 +152,33 @@ public class OfflineFPlayer {
 	public void setAskingToUseALife(boolean askingLifeUse) {
 		this.askingLifeUse = askingLifeUse;
 	}
+	
+	public static void getPlayer(UUID uuid, VoidCallback<OfflineFPlayer> callback) {
+		if (!offlineFPlayers.containsKey(uuid)) {
+			AbstractPlayerLoadEvent event = new AbstractPlayerLoadEvent(uuid) {
+				
+				@Override
+				public void done() {
+					callback.call(offlineFPlayers.get(uuid));
+				}
+			};
+			
+			Bukkit.getPluginManager().callEvent(event);
+		} else
+			callback.call(offlineFPlayers.get(uuid));
+	}
+	
+	public static void getPlayer(String name, VoidCallback<OfflineFPlayer> callback) {
+		OfflinePlayer offline = Bukkit.getOfflinePlayer(UUIDCache.getUUID(name));
 
-	public static OfflineFPlayer getByUuid(UUID uuid) {
-		return offlineFPlayers.get(uuid);
+		if (offline.hasPlayedBefore())
+			getPlayer(offline.getUniqueId(), callback);
 	}
 	
-	@SuppressWarnings("deprecation")
-	public static OfflineFPlayer getByName(String name) {
-		OfflinePlayer offline = Bukkit.getOfflinePlayer(name);
-		
-		if (offline == null)
-			return null;
-		else
-			return getByUuid(offline.getUniqueId());
+	public static void getPlayer(OfflinePlayer offline, VoidCallback<OfflineFPlayer> callback) {
+		getPlayer(offline.getUniqueId(), callback);
 	}
 	
-	public static OfflineFPlayer getByOfflinePlayer(OfflinePlayer offline) {
-		return offlineFPlayers.get(offline.getUniqueId());
-	}
 	
 	public static Map<UUID, OfflineFPlayer> getOfflineFPlayers() {
 		return offlineFPlayers;
@@ -177,5 +187,54 @@ public class OfflineFPlayer {
 	public static Collection<OfflineFPlayer> getDisconnectedOfflineFPlayers() {
 		return offlineFPlayers.values();
 	}
+
+	@Override
+	public void save() {
+		offlineFPlayers.put(offlineApiPlayer.getUUID(), this);
+	}
+
+	@Override
+	public void remove() {
+		offlineFPlayers.remove(offlineApiPlayer.getUUID());		
+	}
+
+	@Override
+	public boolean isSaved() {
+		return offlineFPlayers.containsKey(offlineApiPlayer.getUUID());
+	}
+
+	@Override
+	public void queryDatabase(MongoQueryResult result) {
+		Document document = result.getValue("player", Document.class);
+		Document deathbanDoc = result.getValue("deathban", Document.class);
+		
+		fMap = document.getBoolean("f_map");
+		factionBypass = document.getBoolean("f_bypass");
+		role = Role.valueOf(document.getString("role"));
+		chat = Chat.valueOf(document.getString("chat"));
+		lives = document.getInteger("lives");
+		
+		String faction = document.getString("faction_name");
+		
+		if (faction != null)
+			playerFaction = PlayerFaction.getPlayersFaction().get(faction);
+
+		if (deathbanDoc != null) {
+			String killerUUID = deathbanDoc.getString("killer_uuid");
+			
+			deathban = new Deathban(offlineApiPlayer.getUUID(),
+					killerUUID == null ? null : UUID.fromString(killerUUID),
+					Methods.deserializeLocation(deathbanDoc.getString("location"), false),
+					0.0D,
+					deathbanDoc.getString("death_message"));
+			
+			deathban.setExpireTime(deathbanDoc.getLong("expire_time"));
+			deathban.setDeathTime(deathbanDoc.getLong("death_time"));
+		}
+	}
+	
+	@Deprecated
+	@Override
+	public Document getDocument(Object... objects) {return null;}
 
 }

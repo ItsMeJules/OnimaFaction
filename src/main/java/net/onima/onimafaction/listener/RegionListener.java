@@ -66,10 +66,10 @@ public class RegionListener implements Listener {
 		
 		Bukkit.getScheduler().runTaskAsynchronously(OnimaFaction.getInstance(), () -> {
 			for (Player insidePlayer : claim.toCuboid().getPlayers()) {
-				FPlayer fInside = FPlayer.getByPlayer(insidePlayer);
+				FPlayer fInside = FPlayer.getPlayer(insidePlayer);
 				
 				fInside.setRegionOn(Claim.getClaimAndRegionAt(insidePlayer.getLocation()));
-				insidePlayer.sendMessage("§d§o" + apiPlayer.getName() + " §7a " + claimOrUnclaim + " §7le territoire où vous vous trouvez. Vous êtes maintenant dans " + fInside.getRegionOn().getDisplayName(insidePlayer) + "§7.");
+				insidePlayer.sendMessage("§d§o" + apiPlayer.getDisplayName() + " §7a " + claimOrUnclaim + " §7le territoire où vous vous trouvez. Vous êtes maintenant dans " + fInside.getRegionOn().getDisplayName(insidePlayer) + "§7.");
 			}
 		});
 	}
@@ -80,11 +80,25 @@ public class RegionListener implements Listener {
 		Region region = event.getRegion();
 		
 		if (!(event instanceof PlayerRegionChangeEvent)) {
-			String change = cause == RegionChangeEvent.RegionChangementCause.CREATED ? "§acréée" : "§csupprimée" ;
-			
 			Bukkit.getScheduler().runTaskAsynchronously(OnimaFaction.getInstance(), () -> {
+				String change = "";
+				
+				switch ((RegionChangeEvent.RegionChangementCause) cause) {
+				case CREATED:
+					change = "§acréée";
+					break;
+				case RESIZE:
+					change = "§6modifiée";
+					break;
+				case DELETED:
+					change = "§csupprimée";
+					break;
+				default:
+					break;
+				}
+				
 				for (Player player : event.getRegion().toCuboid().getPlayers()) {
-					FPlayer fInside = FPlayer.getByPlayer(player);
+					FPlayer fInside = FPlayer.getPlayer(player);
 					
 					fInside.setRegionOn(Claim.getClaimAndRegionAt(player.getLocation()));
 					player.sendMessage("§7Une région a été " + change + " §7à l'endroit où vous vous trouvez. §dVous §7êtes maintenant dans " + region.getDisplayName(player) + "§7.");
@@ -276,7 +290,7 @@ public class RegionListener implements Listener {
 			player = (Player) entity;
 		else return 0;
 	
-		if (FPlayer.getByPlayer(player).hasFactionBypass()) return 1;
+		if (FPlayer.getPlayer(player).hasFactionBypass()) return 1;
 		
 		Region region = Claim.getClaimAndRegionAt(location);
 		
@@ -302,7 +316,7 @@ public class RegionListener implements Listener {
 		if (!fromRegion.getName().equalsIgnoreCase(toRegion.getName())) {
 			boolean isTeleport = event instanceof PlayerTeleportEvent;
 			
-			PlayerRegionChangeEvent regionChange = new PlayerRegionChangeEvent(APIPlayer.getByUuid(player.getUniqueId()), from, to, fromRegion, toRegion, isTeleport ? PlayerRegionChangementCause.TELEPORT : PlayerRegionChangementCause.MOVE);
+			PlayerRegionChangeEvent regionChange = new PlayerRegionChangeEvent(APIPlayer.getPlayer(player.getUniqueId()), from, to, fromRegion, toRegion, isTeleport ? PlayerRegionChangementCause.TELEPORT : PlayerRegionChangementCause.MOVE);
 			Bukkit.getPluginManager().callEvent(regionChange);
 			
 			if (regionChange.isCancelled()) {
@@ -316,7 +330,7 @@ public class RegionListener implements Listener {
 				return;
 			}
 			
-			FPlayer.getByUuid(player.getUniqueId()).setRegionOn(toRegion);
+			FPlayer.getPlayer(player.getUniqueId()).setRegionOn(toRegion);
 			
 			String fromDispName = fromRegion.getDisplayName(player), toDispName = toRegion.getDisplayName(player);
 			

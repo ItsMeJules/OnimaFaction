@@ -13,6 +13,7 @@ import org.bukkit.util.StringUtil;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.onima.onimaapi.rank.OnimaPerm;
 import net.onima.onimaapi.utils.JSONMessage;
+import net.onima.onimaapi.utils.Methods;
 import net.onima.onimafaction.commands.faction.FactionArgument;
 import net.onima.onimafaction.events.FactionPlayerJoinEvent;
 import net.onima.onimafaction.faction.Faction;
@@ -35,7 +36,7 @@ public class FactionJoinArgument extends FactionArgument {
 			return false;
 		
 		Player player = (Player) sender;
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
+		FPlayer fPlayer = FPlayer.getPlayer(player);
 		
 		if (fPlayer.getFaction() != null) {
 			player.spigot().sendMessage(new JSONMessage("§cVous avez déjà une faction, quittez la si vous voulez en rejoindre une autre.", "§a/f leave", true, "/f leave").build());
@@ -55,10 +56,11 @@ public class FactionJoinArgument extends FactionArgument {
 		}
 		
 		PlayerFaction pFac = (PlayerFaction) faction;
+		String playerName = Methods.getRealName(sender);
 		
-		if (!pFac.isOpen() && !pFac.getInvitedPlayers().contains(player.getName())) {
+		if (!pFac.isOpen() && !pFac.getInvitedPlayers().contains(playerName)) {
 			player.sendMessage("§cVous avez besoin d'une invitation pour rejoindre la faction " + pFac.getName());
-			pFac.broadcast("§d§o" + player.getName() + " §7§oa essayé de rejoindre votre faction.");
+			pFac.broadcast("§d§o" + playerName + " §7§oa essayé de rejoindre votre faction.");
 			return false;
 		}
 		
@@ -68,7 +70,7 @@ public class FactionJoinArgument extends FactionArgument {
 		if (event.isCancelled()) return false;
 		
 		if (pFac.addMember(fPlayer)) {
-			BaseComponent[] message = new JSONMessage("§d§o" + player.getName() + " §7a rejoint la faction.", "§7Cliquez ici pour kick §d§o" + player.getName(), true, "/f kick " + player.getName()).build();
+			BaseComponent[] message = new JSONMessage("§d§o" + playerName + " §7a rejoint la faction.", "§7Cliquez ici pour kick §d§o" + playerName, true, "/f kick " + playerName).build();
 			
 			for (FPlayer member : pFac.getOnlineMembers(null)) {
 				if (fPlayer.equals(member)) continue;
@@ -76,7 +78,7 @@ public class FactionJoinArgument extends FactionArgument {
 			}
 		}
 		
-		pFac.getInvitedPlayers().remove(player.getName());
+		pFac.getInvitedPlayers().remove(playerName);
 		player.sendMessage("§d§oVous §7avez rejoint la faction §d§o" + faction.getName());
 		return true;
 	}
@@ -86,7 +88,9 @@ public class FactionJoinArgument extends FactionArgument {
 		if (!(sender instanceof Player) || args.length != 2)
 			return Collections.emptyList();
 		
-		return Faction.getFactions().parallelStream().filter(faction -> faction instanceof PlayerFaction).filter(faction -> ((PlayerFaction) faction).getInvitedPlayers().contains(sender.getName())).map(Faction::getName).filter(name -> StringUtil.startsWithIgnoreCase(name, args[1])).collect(Collectors.toList());
+		String senderName = Methods.getRealName(sender);
+		
+		return Faction.getFactions().parallelStream().filter(faction -> faction instanceof PlayerFaction).filter(faction -> ((PlayerFaction) faction).getInvitedPlayers().contains(senderName)).map(Faction::getName).filter(name -> StringUtil.startsWithIgnoreCase(name, args[1])).collect(Collectors.toList());
 	}
 
 }

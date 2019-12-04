@@ -27,7 +27,7 @@
     
     <dependency>
       <groupId>net.onima</groupId>
-      <artifactId>OnimaAPI</artifactId>
+      <artifactId>OnimaAPI-NoSQL</artifactId>
       <version>0.0.1-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
@@ -36,6 +36,13 @@
     <groupId>org.github.paperspigot</groupId>
     <artifactId>paperspigot</artifactId>
     <version>1.7.10-R0.1-SNAPSHOT</version>
+    <scope>provided</scope>
+  </dependency>
+  
+  <dependency>
+    <groupId>org.mongodb</groupId>
+    <artifactId>mongodb-driver-sync</artifactId>
+    <version>LATEST</version>
     <scope>provided</scope>
   </dependency>
     

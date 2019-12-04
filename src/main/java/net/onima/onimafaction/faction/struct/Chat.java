@@ -18,7 +18,7 @@ public enum Chat {
 	}
 	
 	public Chat nextChat() {
-		switch(this) {
+		switch (this) {
 		case GLOBAL:
 			return FACTION;
 		case FACTION:
@@ -29,7 +29,8 @@ public enum Chat {
 	}
 	
 	public static Chat fromString(String name) {
-		switch(name) {
+		switch (name) {
+		case "GLOBAL":
 		case "global":
 		case "public":
 		case "pc":
@@ -37,14 +38,17 @@ public enum Chat {
 		case "gc":
 		case "g":
 			return GLOBAL;
+		case "STAFF":
 		case "staff":
 		case "s":
 		case "sc":
 			return STAFF;
+		case "FACTION":
 		case "faction":
 		case "f":
 		case "fc": 
 			return FACTION;
+		case "ALLIANCE":
 		case "alliance":
 		case "ally":
 		case "a":

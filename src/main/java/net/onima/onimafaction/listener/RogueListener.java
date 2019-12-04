@@ -16,7 +16,7 @@ public class RogueListener implements Listener {
 		if (event.getEntity() instanceof Player && event.getDamager() instanceof Player) {
 			Player player = (Player) event.getEntity();
 			Player attacker = (Player) event.getDamager();
-			FPlayer fPlayer = FPlayer.getByPlayer(player);
+			FPlayer fPlayer = FPlayer.getPlayer(player);
 			Rogue rogue = (Rogue) fPlayer.getArmorClass(Rogue.class);
 			
 			if (rogue.isActivated()) {
@@ -24,7 +24,7 @@ public class RogueListener implements Listener {
 				
 				if (hand != null && Rogue.ROGUE_BACKSTAB.getItemStack().isSimilar(hand)) {
 					Rogue.ROGUE_BACKSTAB.action(attacker);
-					attacker.sendMessage("§eVous §7avez poignardé §c" + player.getName());
+					attacker.sendMessage("§eVous §7avez poignardé §c" + fPlayer.getApiPlayer().getDisplayName());
 					
 					player.sendMessage("§c" + attacker.getName() + " §evous §7a poignardé.");
 					Rogue.ROGUE_BACKSTAB.getUseSound().play(fPlayer.getApiPlayer());

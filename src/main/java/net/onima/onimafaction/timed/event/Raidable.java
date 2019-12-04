@@ -47,7 +47,7 @@ public class Raidable extends TimedEvent implements FactionServerEvent {
 	}
 
 	@Override
-	public void start(long time, long delay) {
+	public void start(long time, long delay, String starterName) {
 		FactionEventServerStartEvent event = new FactionEventServerStartEvent(this);
 		Bukkit.getPluginManager().callEvent(event);
 		
@@ -55,6 +55,7 @@ public class Raidable extends TimedEvent implements FactionServerEvent {
 			return;
 		
 		timedTask = new TimedTask(this, time, delay);
+		super.starterName = starterName;
 		
 		timedTask.runTaskTimer(plugin, 0L, 20L);
 		runningTask = timedTask;
@@ -66,6 +67,7 @@ public class Raidable extends TimedEvent implements FactionServerEvent {
 		timedTask.cancel();
 		runningTask = null;
 		timedTask = null;
+		starterName = null;
 		plugin.setFactionServerEvent(null);
 	}
 	
@@ -94,7 +96,8 @@ public class Raidable extends TimedEvent implements FactionServerEvent {
 			}
 			
 			Methods.playServerSound(oSoundCancel);
-			Bukkit.broadcastMessage(cancelMessage);
+			
+			stop();
 			break;
 		default:
 			break;

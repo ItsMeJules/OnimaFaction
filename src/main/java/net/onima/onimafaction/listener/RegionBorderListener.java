@@ -24,7 +24,7 @@ public class RegionBorderListener implements Listener {
 		int toZ = to.getBlockZ();
 
 		if (from.getBlockX() != toX || from.getBlockY() != toY || from.getBlockZ() != toZ) {
-			FPlayer fPlayer = FPlayer.getByPlayer(event.getPlayer()); 
+			FPlayer fPlayer = FPlayer.getPlayer(event.getPlayer()); 
 			FakeBlock.generate(fPlayer.getApiPlayer(), fPlayer.playerBarriers(to));
 		}
 	}

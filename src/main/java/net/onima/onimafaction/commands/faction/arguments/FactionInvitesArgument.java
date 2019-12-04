@@ -12,6 +12,7 @@ import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.onima.onimaapi.rank.OnimaPerm;
 import net.onima.onimaapi.utils.JSONMessage;
+import net.onima.onimaapi.utils.Methods;
 import net.onima.onimafaction.commands.faction.FactionArgument;
 import net.onima.onimafaction.faction.PlayerFaction;
 import net.onima.onimafaction.players.FPlayer;
@@ -34,13 +35,14 @@ public class FactionInvitesArgument extends FactionArgument {
 		
 		Player player = (Player) sender;
 		List<String> received = new ArrayList<>(10);
+		String senderName = Methods.getRealName(sender);
 		
 		for (PlayerFaction faction : PlayerFaction.getPlayersFaction().values()) {
-			if (faction.getInvitedPlayers().contains(sender.getName()))
+			if (faction.getInvitedPlayers().contains(senderName))
 				received.add(faction.getName());
 		}
 		
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
+		FPlayer fPlayer = FPlayer.getPlayer(player);
 		PlayerFaction faction = null;
 		
 		if ((faction = fPlayer.getFaction()) != null) {

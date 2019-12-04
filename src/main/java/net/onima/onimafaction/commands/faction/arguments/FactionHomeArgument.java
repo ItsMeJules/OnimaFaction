@@ -34,7 +34,7 @@ public class FactionHomeArgument extends FactionArgument {
 			return false;
 		
 		Player player = (Player) sender;
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
+		FPlayer fPlayer = FPlayer.getPlayer(player);
 		PlayerFaction faction = null;
 		
 		if ((faction = fPlayer.getFaction()) == null) {
@@ -65,7 +65,7 @@ public class FactionHomeArgument extends FactionArgument {
 		if (regionOn instanceof Claim) {
 			Faction factionAt = ((Claim) regionOn).getFaction();
 			
-			if (!factionAt.isNormal() && !factionAt.getName().equalsIgnoreCase(faction.getName())) {
+			if (!factionAt.getName().equalsIgnoreCase(faction.getName())) {
 				player.sendMessage("§cVous ne pouvez pas vous téléporter dans un territoire ennemie ! Si vous êtes bloqué, utilisez /f stuck.");
 				return false;
 			}

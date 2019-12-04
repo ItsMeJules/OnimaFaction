@@ -47,7 +47,7 @@ public class BardItemCooldown extends Cooldown implements Listener {
 		Player player = event.getPlayer();
 		long remaining;
 		
-		Bard bard = (Bard) FPlayer.getByPlayer(player).getArmorClass(Bard.class);
+		Bard bard = (Bard) FPlayer.getPlayer(player).getArmorClass(Bard.class);
 		
 		if (bard.isActivated()) {
 			if ((remaining = getTimeLeft(player.getUniqueId())) > 0L) {
@@ -77,7 +77,7 @@ public class BardItemCooldown extends Cooldown implements Listener {
 		long remaining;
 		Player player = event.getPlayer();
 		
-		Bard bard = (Bard) FPlayer.getByPlayer(player).getArmorClass(Bard.class);
+		Bard bard = (Bard) FPlayer.getPlayer(player).getArmorClass(Bard.class);
 		
 		if (bard.isActivated()) {
 			if ((remaining = getTimeLeft(player.getUniqueId())) > 0L) {

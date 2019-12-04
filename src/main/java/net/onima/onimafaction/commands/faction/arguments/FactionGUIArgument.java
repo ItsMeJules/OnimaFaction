@@ -28,7 +28,7 @@ public class FactionGUIArgument extends FactionArgument {
 			return false;
 		
 		Player player = (Player) sender;
-		APIPlayer apiPlayer = APIPlayer.getByPlayer(player);
+		APIPlayer apiPlayer = APIPlayer.getPlayer(player);
 		
 		apiPlayer.openMenu(PacketMenu.getMenu("faction_gui"));
 		return true;

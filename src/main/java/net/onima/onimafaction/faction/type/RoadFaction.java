@@ -7,6 +7,7 @@ import org.bukkit.World.Environment;
 import org.bukkit.command.CommandSender;
 
 import net.onima.onimaapi.utils.ConfigurationService;
+import net.onima.onimaapi.zone.struct.Flag;
 import net.onima.onimafaction.faction.Faction;
 import net.onima.onimafaction.faction.claim.Claim;
 import net.onima.onimafaction.players.FPlayer;
@@ -21,7 +22,7 @@ public class RoadFaction extends Faction {
 	public RoadFaction(String name) {
 		super(name);
 		
-		setFlags(null, null);
+		setFlags(new Flag[0]);
 	}
 
 	@Override
@@ -37,6 +38,12 @@ public class RoadFaction extends Faction {
 		claim.setPriority(3);
 		return claims.add(claim);
 	}
+	
+	@Override
+	public void save() {}
+	
+	@Override
+	public void remove() {}
 	
 	public static void init() {
 		north = new NorthRoad();

@@ -58,7 +58,7 @@ public abstract class Buff implements Saver {
 	}
 	
 	public static Buff fromName(String id) {
-		return buffs.parallelStream().filter(buff -> buff.id.equalsIgnoreCase(id)).findFirst().orElse(null);
+		return buffs.stream().filter(buff -> buff.id.equalsIgnoreCase(id)).findFirst().orElse(null);
 	}
 
 }

@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import net.onima.onimaapi.rank.OnimaPerm;
 import net.onima.onimaapi.utils.ConfigurationService;
 import net.onima.onimaapi.utils.JSONMessage;
+import net.onima.onimaapi.utils.Methods;
 import net.onima.onimaapi.zone.Cuboid;
 import net.onima.onimaapi.zone.type.Region;
 import net.onima.onimafaction.commands.faction.FactionArgument;
@@ -32,7 +33,7 @@ public class FactionForceUnclaimArgument extends FactionArgument {
 		if (checks(sender, args, 1, true))
 			return false;
 		
-		FPlayer fPlayer = FPlayer.getByPlayer((Player) sender);
+		FPlayer fPlayer = FPlayer.getPlayer((Player) sender);
 		Region region = fPlayer.getRegionOn();
 		
 		if (!(region instanceof Claim)) {
@@ -50,7 +51,7 @@ public class FactionForceUnclaimArgument extends FactionArgument {
 				Cuboid cuboid = claim.toCuboid();
 				Location middle = cuboid.getCenterLocation();
 				
-				((PlayerFaction) faction).broadcast(new JSONMessage("§d§o" + sender.getName() + " §7a unclaim un de vos territoire. Passez votre souris pour plus d'informations.", "§e" + claim.getName() + ' ' + cuboid.getXLength() + 'x' + cuboid.getZLength() + "§7- §d§o" + middle.getBlockX() + " §c| §d§o" + middle.getBlockZ() + " §7(§e0" + ConfigurationService.MONEY_SYMBOL + "§7)"));
+				((PlayerFaction) faction).broadcast(new JSONMessage("§d§o" + Methods.getRealName(sender) + " §7a unclaim un de vos territoire. Passez votre souris pour plus d'informations.", "§e" + claim.getName() + ' ' + cuboid.getXLength() + 'x' + cuboid.getZLength() + "§7- §d§o" + middle.getBlockX() + " §c| §d§o" + middle.getBlockZ() + " §7(§e0" + ConfigurationService.MONEY_SYMBOL + "§7)"));
 			}
 			return true;
 		}

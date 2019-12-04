@@ -22,7 +22,7 @@ public class ArmorClassListener implements Listener {
 		LivingEntity entity = event.getEntity();
 		
 		if (entity instanceof Player) {
-			ArmorClass equipped = FPlayer.getByUuid(entity.getUniqueId()).getEquippedClass();
+			ArmorClass equipped = FPlayer.getPlayer(entity.getUniqueId()).getEquippedClass();
 			
 			if (equipped == null) return;
 			
@@ -38,7 +38,7 @@ public class ArmorClassListener implements Listener {
 	@EventHandler
 	public void onMilkDrink(PlayerItemConsumeEvent event) { //Simulating the milk drink
 		Player player = event.getPlayer();
-		ArmorClass armorClass = FPlayer.getByPlayer(player).getEquippedClass();
+		ArmorClass armorClass = FPlayer.getPlayer(player).getEquippedClass();
 
 		if (armorClass == null) return;
 		

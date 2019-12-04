@@ -41,7 +41,7 @@ public class Rogue extends ArmorClass {
 			
 			@Override
 			public boolean action(Player player) {
-				useSound.play(APIPlayer.getByUuid(player.getUniqueId()));
+				useSound.play(APIPlayer.getPlayer(player.getUniqueId()));
 				Methods.removeOneItem(player);
 				return true;
 			}

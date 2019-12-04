@@ -17,6 +17,7 @@ import org.bukkit.inventory.ItemStack;
 import com.google.common.collect.Lists;
 
 import net.md_5.bungee.api.chat.BaseComponent;
+import net.onima.onimaapi.caching.UUIDCache;
 import net.onima.onimaapi.gui.PacketMenu;
 import net.onima.onimaapi.gui.PacketStaticMenu;
 import net.onima.onimaapi.gui.buttons.BackButton;
@@ -25,9 +26,9 @@ import net.onima.onimaapi.gui.buttons.MenuOpenerButton;
 import net.onima.onimaapi.gui.buttons.utils.Button;
 import net.onima.onimaapi.gui.menu.AnvilInputMenu;
 import net.onima.onimaapi.players.APIPlayer;
-import net.onima.onimaapi.players.OfflineAPIPlayer;
 import net.onima.onimaapi.utils.BetterItem;
 import net.onima.onimaapi.utils.ConfigurationService;
+import net.onima.onimaapi.utils.Methods;
 import net.onima.onimafaction.OnimaFaction;
 import net.onima.onimafaction.commands.faction.arguments.FactionListArgument;
 import net.onima.onimafaction.faction.PlayerFaction;
@@ -218,11 +219,11 @@ public class FactionGUIMenu extends PacketMenu implements PacketStaticMenu {//TO
 							}
 							
 							destroy = commandManager.forceCommand(event.getClicker(), command, argsCloned);
-							FactionGUIMenu.this.open(APIPlayer.getByPlayer(clicker));
+							FactionGUIMenu.this.open(APIPlayer.getPlayer(clicker));
 							event.setWillDestroy(destroy);
 						}
 					}
-				}.open(APIPlayer.getByPlayer(clicker));
+				}.open(APIPlayer.getPlayer(clicker));
 			} else
 				commandManager.forceCommand(clicker, command, args);
 		}
@@ -241,10 +242,9 @@ public class FactionGUIMenu extends PacketMenu implements PacketStaticMenu {//TO
 		public void open(APIPlayer apiPlayer) {
 			super.open(apiPlayer);
 
-			faction = FPlayer.getByUuid(apiPlayer.getUUID()).getFaction();
+			faction = FPlayer.getPlayer(apiPlayer.getUUID()).getFaction();
 		}
 		
-		@SuppressWarnings("deprecation")
 		@Override
 		public void registerItems() {
 			List<String> invites = faction.getInvitedPlayers();
@@ -252,10 +252,11 @@ public class FactionGUIMenu extends PacketMenu implements PacketStaticMenu {//TO
 			Collections.sort(invites);
 			
 			for (String invited : invites) {
-				OfflinePlayer offline = Bukkit.getOfflinePlayer(invited);
-				FactionGUIButton button = new FactionGUIButton(false, new BetterItem(1, offline.getName(), Lists.newArrayList("§7§oCliquez pour supprimer l'invitation de §d" + offline.getName()), OfflineAPIPlayer.getByOfflinePlayer(offline)));
+				OfflinePlayer offline = Bukkit.getOfflinePlayer(UUIDCache.getUUID(invited));
+				String realName = Methods.getRealName(offline);
+				FactionGUIButton button = new FactionGUIButton(false, new BetterItem(1, realName, Lists.newArrayList("§7§oCliquez pour supprimer l'invitation de §d" + realName), offline));
 				
-				button.setCommand("faction", new String[] {"deinvite", offline.getName()});
+				button.setCommand("faction", new String[] {"deinvite", realName});
 				
 				if (buttons.size() - 1 < size)
 					buttons.put(buttons.size(), button);

@@ -35,11 +35,12 @@ public class FactionBypassArgument extends FactionArgument {
 			return false;
 		}
 		
-		OfflineFPlayer fPlayer = OfflineFPlayer.getByOfflinePlayer(offline);
-		fPlayer.setFactionBypass(!fPlayer.hasFactionBypass());
-		
-		if (offline.isOnline())
-			((Player) offline).sendMessage("§dFaction bypass " + (fPlayer.hasFactionBypass() ? "§aON" : "§cOFF") + "§d.");
+		OfflineFPlayer.getPlayer(offline, fPlayer -> {
+			fPlayer.setFactionBypass(!fPlayer.hasFactionBypass());
+			
+			if (offline.isOnline())
+				((Player) offline).sendMessage("§dFaction bypass " + (fPlayer.hasFactionBypass() ? "§aON" : "§cOFF") + "§d.");
+		});
 		
 		return true;
 	}

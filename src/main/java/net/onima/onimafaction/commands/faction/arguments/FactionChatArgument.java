@@ -32,7 +32,7 @@ public class FactionChatArgument extends FactionArgument {
 			return false;
 		
 		Player player = (Player) sender;
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
+		FPlayer fPlayer = FPlayer.getPlayer(player);
 		
 		if (!fPlayer.hasFaction()) {
 			player.spigot().sendMessage(new JSONMessage("§cVous avez besoin d'une faction pour changer de chat !", "§a/f create ", true, "/f create ", ClickEvent.Action.SUGGEST_COMMAND).build());
@@ -51,8 +51,7 @@ public class FactionChatArgument extends FactionArgument {
 		if(!(sender instanceof Player) || args.length != 2)
 			return Collections.emptyList();
 		
-		Player player = (Player) sender;
-		FPlayer fPlayer = FPlayer.getByPlayer(player);
+		FPlayer fPlayer = FPlayer.getPlayer((Player) sender);
 		List<String> chats = new ArrayList<>();
 		
 		for (Chat chat : Chat.values()) {

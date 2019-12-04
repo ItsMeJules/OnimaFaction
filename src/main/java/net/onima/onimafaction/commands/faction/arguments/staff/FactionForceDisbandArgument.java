@@ -11,6 +11,7 @@ import org.bukkit.util.StringUtil;
 
 import net.onima.onimaapi.rank.OnimaPerm;
 import net.onima.onimaapi.utils.JSONMessage;
+import net.onima.onimaapi.utils.Methods;
 import net.onima.onimafaction.commands.faction.FactionArgument;
 import net.onima.onimafaction.faction.Faction;
 import net.onima.onimafaction.faction.PlayerFaction;
@@ -37,7 +38,7 @@ public class FactionForceDisbandArgument extends FactionArgument {
 			return false;
 		}
 		
-		Bukkit.broadcastMessage("§d§o" + sender.getName() + " §7a dissout de force la faction §d§o" + faction.getName());
+		Bukkit.broadcastMessage("§d§o" + Methods.getRealName(sender) + " §7a dissout de force la faction §d§o" + faction.getName());
 		
 		if (faction instanceof PlayerFaction)
 			((PlayerFaction) faction).disband(null);
