@@ -184,8 +184,8 @@ public class PlayerFaction extends Faction {
 	}
 	
 	public boolean addMember(OfflineFPlayer offlinePlayer, Role role) {
-		if (offlinePlayer == null) return false;
-		
+		if (offlinePlayer == null)
+			return false;
 		
 		if (members.put(offlinePlayer.getOfflineApiPlayer().getUUID(), role) == null) {
 			offlinePlayer.setFaction(this);
@@ -229,11 +229,10 @@ public class PlayerFaction extends Faction {
 			OfflinePlayer offline = Bukkit.getOfflinePlayer(uuid);
 			
 			if (offline.isOnline()) {
-				FPlayer fPlayer = FPlayer.getPlayer((Player) offline);
-				if (player != null && !player.canSee(fPlayer.getApiPlayer().toPlayer()))
+				if (player != null && !player.canSee((Player) offline))
 					continue;
 				else
-					onlineMembers.add(fPlayer);
+					onlineMembers.add(FPlayer.getPlayer(offline.getUniqueId()));
 			}
 		}
 		return onlineMembers;

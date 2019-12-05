@@ -54,29 +54,26 @@ public class StaffListener implements Listener {
 			spies.add(Bukkit.getConsoleSender());
 		
 		RankType senderRank = RankType.CONSOLE, receiverRank = RankType.CONSOLE;
-		boolean senderDisguised = false, receiverDisguised = false;
 		
 		if (sender instanceof Player) {
 			APIPlayer apiPlayer = APIPlayer.getPlayer((Player) sender);
 
-			if (apiPlayer.getDisguiseManager().isDisguised()) {
+			if (apiPlayer.getDisguiseManager().isDisguised())
 				senderRank = apiPlayer.getDisguiseManager().getRankType();
-				senderDisguised = true;
-			} else
+			else
 				senderRank = apiPlayer.getRank().getRankType();
 		}
 		
 		if (receiver instanceof Player) {
 			APIPlayer apiPlayer = APIPlayer.getPlayer((Player) receiver);
 			
-			if (apiPlayer.getDisguiseManager().isDisguised()) {
+			if (apiPlayer.getDisguiseManager().isDisguised())
 				receiverRank = apiPlayer.getDisguiseManager().getRankType();
-				receiverDisguised = true;
-			} else
+			else
 				receiverRank = apiPlayer.getRank().getRankType();	
 		}
 		
-		String format = PrivateMessage.spyFormat(senderDisguised, receiverDisguised, message, Methods.getName(sender, true), Methods.getName(receiver, true), senderRank, receiverRank);
+		String format = PrivateMessage.spyFormat(message, Methods.getName(sender, true), Methods.getName(receiver, true), senderRank, receiverRank);
 		
 		if (!OnimaPerm.CHAT_FILTER_BYPASS.has(event.getSender()) && OnimaAPI.getInstance().getChatManager().shouldFilter(message)) {
 			if (spies.removeIf(spy -> OnimaPerm.CHAT_FILTER_BYPASS.has(spy)))

@@ -49,7 +49,7 @@ public class FactionForceJoinArgument extends FactionArgument {
 		}
 		
 		if (!(maybeFaction instanceof PlayerFaction)) {
-			sender.sendMessage("§cVous pouvez seulement changer le dtr des factions de joueurs !");
+			sender.sendMessage("§cVous pouvez seulement rejoindre des factions de joueurs !");
 			return false;
 		}
 		
@@ -109,6 +109,7 @@ public class FactionForceJoinArgument extends FactionArgument {
 			if (StringUtil.startsWithIgnoreCase(name, args[1]))
 				completions.add(name);
 		}
+		
 		return completions;
 	}
 

@@ -17,6 +17,7 @@ import net.onima.onimaapi.utils.JSONMessage;
 import net.onima.onimaapi.utils.Methods;
 import net.onima.onimafaction.events.FactionFocusEvent;
 import net.onima.onimafaction.events.FactionUnfocusEvent;
+import net.onima.onimafaction.faction.Faction;
 import net.onima.onimafaction.faction.PlayerFaction;
 import net.onima.onimafaction.players.FPlayer;
 
@@ -60,6 +61,18 @@ public class FocusCommand implements CommandExecutor { //TODO ajouter le focus p
 		if (uuid == null) {
 			player.sendMessage("§c" + args[0] + " ne s'est jamais connecté sur le serveur !");
 			return false;
+		}
+		
+		if (faction.getMembers().containsKey(uuid)) {
+			sender.sendMessage("§cVous ne pouvez pas focus un joueur de votre faction !");
+			return false;
+		}
+		
+		for (String ally : faction.getAllies()) {
+			if (((PlayerFaction) Faction.getFaction(ally)).getMembers().containsKey(uuid)) {
+				sender.sendMessage("§cVous ne pouvez pas focus un joueur allié à votre faction !");
+				return false;
+			}
 		}
 		
 		OfflinePlayer offline = Bukkit.getOfflinePlayer(uuid);
