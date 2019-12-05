@@ -188,7 +188,7 @@ public class EntityListener implements Listener {
 		
 		RankType rank = chatEvent.getRankType();
 		
-		new FactionChatMessage(player.getName(), player)
+		new FactionChatMessage(player.getName())
 		.faction(faction)
 		.rank(rank)
 		.canUseColor(OnimaPerm.ONIMAAPI_COLORED_CHAT.has(player))

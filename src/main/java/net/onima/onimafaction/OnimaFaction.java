@@ -113,6 +113,7 @@ public class OnimaFaction extends JavaPlugin {
 		Cooldown.register(new ReaperPowerCooldown());
 		Cooldown.register(new ReaperStealthCooldown());
 		
+		PlayerFaction.loadDeathbans();
 		WildernessFaction.init();
 		SafeZoneFaction.init();
 		RoadFaction.init();

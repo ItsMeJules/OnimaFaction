@@ -39,6 +39,7 @@ import net.onima.onimafaction.cooldowns.PvPTimerCooldown;
 import net.onima.onimafaction.events.armorclass.ArmorClassLoadEvent;
 import net.onima.onimafaction.events.armorclass.ArmorClassUnequipEvent;
 import net.onima.onimafaction.events.armorclass.ArmorClassUnequipEvent.ArmorClassUnequipCause;
+import net.onima.onimafaction.faction.PlayerFaction;
 import net.onima.onimafaction.faction.StuckRequest;
 import net.onima.onimafaction.faction.claim.Claim;
 import net.onima.onimafaction.faction.claim.ClaimSelection;
@@ -77,6 +78,9 @@ public class FPlayer extends OfflineFPlayer {
 	
 	public void loadJoin() {
 		region = Claim.getClaimAndRegionAt(apiPlayer.toPlayer().getLocation());
+		
+		if (PlayerFaction.getNotRegisteredPlayersDeathban().containsKey(apiPlayer.getUUID()))
+			PlayerFaction.getNotRegisteredPlayersDeathban().put(apiPlayer.getUUID(), deathban);
 	}
 	
 	public APIPlayer getApiPlayer() {
@@ -300,6 +304,9 @@ public class FPlayer extends OfflineFPlayer {
 	public void remove() {
 		super.remove();
 		players.remove(apiPlayer.getUUID());
+		
+		if (deathban != null)
+			PlayerFaction.getNotRegisteredPlayersDeathban().put(apiPlayer.getUUID(), deathban);
 	}
 
 	public static FPlayer getPlayer(UUID uuid) {

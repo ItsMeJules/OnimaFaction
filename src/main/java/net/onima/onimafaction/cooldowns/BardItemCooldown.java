@@ -45,16 +45,9 @@ public class BardItemCooldown extends Cooldown implements Listener {
 	@EventHandler
 	public void onItemHeld(PlayerItemHeldEvent event) {
 		Player player = event.getPlayer();
-		long remaining;
-		
 		Bard bard = (Bard) FPlayer.getPlayer(player).getArmorClass(Bard.class);
 		
 		if (bard.isActivated()) {
-			if ((remaining = getTimeLeft(player.getUniqueId())) > 0L) {
-				player.sendMessage("§cVous devez attendre " + LongTime.setHMSFormat(remaining) + " avant de pouvoir bard de nouveau !");
-				return;
-			}
-			
 			ItemStack item = player.getInventory().getItem(event.getNewSlot());
 			
 			if (item != null) {

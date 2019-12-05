@@ -43,6 +43,7 @@ import net.onima.onimafaction.commands.faction.arguments.staff.FactionClearClaim
 import net.onima.onimafaction.commands.faction.arguments.staff.FactionDeathBanMultiplierArgument;
 import net.onima.onimafaction.commands.faction.arguments.staff.FactionDeathbanArgument;
 import net.onima.onimafaction.commands.faction.arguments.staff.FactionDtrArgument;
+import net.onima.onimafaction.commands.faction.arguments.staff.FactionDtrCooldownArgument;
 import net.onima.onimafaction.commands.faction.arguments.staff.FactionDtrLossArgument;
 import net.onima.onimafaction.commands.faction.arguments.staff.FactionFlagArgument;
 import net.onima.onimafaction.commands.faction.arguments.staff.FactionForceColeaderArgument;
@@ -103,6 +104,7 @@ public class FactionExecutor extends ArgumentExecutor {
 		addArgument(new FactionDeathbanArgument());
 		addArgument(new FactionDeathBanMultiplierArgument());
 		addArgument(new FactionDtrArgument());
+		addArgument(new FactionDtrCooldownArgument());
 		addArgument(new FactionDtrLossArgument());
 		addArgument(new FactionFlagArgument());
 		addArgument(new FactionForceColeaderArgument());

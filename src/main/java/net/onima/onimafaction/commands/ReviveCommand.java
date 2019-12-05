@@ -28,7 +28,7 @@ public class ReviveCommand implements CommandExecutor, TabCompleter {
 		}
 		
 		if (args.length < 1) {
-			usage.send(sender, "§7Utilsation : ");
+			usage.send(sender, "§7Utilisation : ");
 			return false;
 		}
 		
@@ -43,6 +43,7 @@ public class ReviveCommand implements CommandExecutor, TabCompleter {
 				return;
 			}
 			
+			sender.sendMessage("§dVous §7avez revive §d" + offline.getOfflineApiPlayer().getName());
 			offline.setDeathban(null);
 		});
 		

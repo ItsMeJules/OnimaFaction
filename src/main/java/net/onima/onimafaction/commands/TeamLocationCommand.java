@@ -15,7 +15,6 @@ import net.onima.onimaapi.OnimaAPI;
 import net.onima.onimaapi.players.APIPlayer;
 import net.onima.onimaapi.rank.OnimaPerm;
 import net.onima.onimaapi.utils.JSONMessage;
-import net.onima.onimaapi.utils.Methods;
 import net.onima.onimafaction.events.FactionChatEvent;
 import net.onima.onimafaction.faction.PlayerFaction;
 import net.onima.onimafaction.faction.struct.Chat;
@@ -56,7 +55,7 @@ public class TeamLocationCommand implements CommandExecutor {
 		if (event.isCancelled()) 
 			return false;
 		
-		new FactionChatMessage(Methods.getRealName(sender), message, player)
+		new FactionChatMessage(sender.getName(), message)
 		.faction(faction)
 		.chat(event.getChat())
 		.role(fPlayer.getRole())

@@ -121,6 +121,9 @@ public class OfflineFPlayer implements NoSQLSaver {
 	public void setDeathban(Deathban deathban) {
 		this.deathban = deathban;
 		
+		if (PlayerFaction.getNotRegisteredPlayersDeathban().containsKey(offlineApiPlayer.getUUID()))
+			PlayerFaction.getNotRegisteredPlayersDeathban().remove(offlineApiPlayer.getUUID());
+			
 		if (deathban != null)
 			deathban.ban();
 	}

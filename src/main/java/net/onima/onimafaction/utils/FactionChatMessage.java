@@ -23,22 +23,17 @@ import net.onima.onimafaction.faction.struct.Role;
 
 public class FactionChatMessage extends ChatMessage {
 	
-	private Player player;
 	private Faction faction;
 	private Chat chat;
 	private Role role;
 	private BaseComponent[] enemyComponents, allyComponents, factionComponents;
 
-	public FactionChatMessage(String playerName, String message, Player player) {
+	public FactionChatMessage(String playerName, String message) {
 		super(playerName, message);
-		
-		this.player = player;
 	}
 	
-	public FactionChatMessage(String playerName, Player player) {
+	public FactionChatMessage(String playerName) {
 		super(playerName);
-		
-		this.player = player;
 	}
 	
 	public FactionChatMessage faction(Faction faction) {
@@ -129,7 +124,7 @@ public class FactionChatMessage extends ChatMessage {
 		} else {
 			if (chat == Chat.GLOBAL) {
 				for (Relation relation : Relation.values()) {
-					ComponentBuilder builder = new ComponentBuilder("§e[" + relation.getColor() + faction.getName() + "§e]§r ");
+					ComponentBuilder builder = new ComponentBuilder("§6[" + relation.getColor() + faction.getName() + "§6]§r ");
 					boolean jsonPre = rank != RankType.DEFAULT || rank != RankType.BOT;
 					
 					builder.event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(rank.getDescription()).create()));
@@ -201,7 +196,7 @@ public class FactionChatMessage extends ChatMessage {
 				Methods.sendJSON(sender, components);
 		} else {
 			for (CommandSender sender : senders) {
-				switch (faction.getRelation(player)) {
+				switch (faction.getRelation(sender)) {
 				case ALLY:
 					Methods.sendJSON(sender, allyComponents);
 					break;

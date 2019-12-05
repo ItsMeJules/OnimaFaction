@@ -146,7 +146,7 @@ public class Deathban implements MongoSerializer {
 		if (OfflineFPlayer.getOfflineFPlayers().containsKey(uuid))
 			deathban = OfflineFPlayer.getOfflineFPlayers().get(uuid).getDeathban();
 		else
-			PlayerFaction.getNotRegisteredPlayersDeathban().get(uuid);
+			deathban = PlayerFaction.getNotRegisteredPlayersDeathban().get(uuid);
 		
 		return deathban;
 	}

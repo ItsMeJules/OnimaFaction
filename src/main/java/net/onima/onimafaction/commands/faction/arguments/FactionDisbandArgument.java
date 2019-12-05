@@ -38,7 +38,7 @@ public class FactionDisbandArgument extends FactionArgument {
 			return false;
 		}
 		
-		if (faction.isRaidable() && OnimaFaction.getInstance().getFactionServerEvent() != null) {
+		if (faction.isRaidable() && OnimaFaction.getInstance().getFactionServerEvent() == null) {
 			player.sendMessage("§cVous ne pouvez pas dissoudre votre faction tant que celle-ci est raidable ! Ce serait trop facile...");
 			return false;
 		}

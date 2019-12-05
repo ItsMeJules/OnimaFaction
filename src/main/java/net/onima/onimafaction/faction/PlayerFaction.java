@@ -57,6 +57,7 @@ public class PlayerFaction extends Faction {
 	
 	static {
 		playersFaction = new HashMap<>();
+		notRegisteredPlayersDeathbans = new HashMap<>();
 	}
 
 	private Map<UUID, Role> members;
@@ -146,7 +147,14 @@ public class PlayerFaction extends Faction {
 		if (!members.isEmpty()) sender.sendMessage(" §eMembre" + (members.size() > 1 ? 's' : "") + " : " + StringUtils.join(members, "§7, "));
 		sender.sendMessage(" §eBalance : §7" + Methods.round("0.0", money)+ ' ' + ConfigurationService.MONEY_SYMBOL + "§e | §6Kills : §a" + getTotalFactionKills());
 		sender.sendMessage(" §eDTR : " + getDTRColour() + Methods.round("0.00", DTR) + getDTRStatut().getSymbol() + "§7/" + getMaxDTR() + (fDtrEgg.getAmount() > 0 ? " §7[§c+" + fDtrEgg.getAmount() * fDtrEgg.getType().getChanger() + "§7]" : ""));
-		if (regenCooldown > 0) sender.sendMessage("§eDTR Freeze : §c" + LongTime.setYMDWHMSFormat(regenCooldown));
+		
+		long actualRegen = regenCooldown - System.currentTimeMillis();
+		
+		if (actualRegen > 0)
+			sender.sendMessage("§eDTR Freeze : §c" + LongTime.setYMDWHMSFormat(actualRegen));
+		else
+			regenCooldown = -1;
+		
 		if (player != null) {
 			PlayerFaction faction = FPlayer.getPlayer(player).getFaction();
 			if (faction != null && faction.equals(this) && announcement != null) 
@@ -252,7 +260,7 @@ public class PlayerFaction extends Faction {
 	public OfflinePlayer getLeader() {
 		for (Entry<UUID, Role> entry : members.entrySet()) {
 			if (entry.getValue() == Role.LEADER)
-				return Bukkit.getPlayer(entry.getKey());
+				return Bukkit.getOfflinePlayer(entry.getKey());
 		}
 		return null;
 	}
@@ -363,11 +371,11 @@ public class PlayerFaction extends Faction {
 	}
 
 	public long getRegenCooldown() {
-		return regenCooldown == -1 ? -1 : regenCooldown-System.currentTimeMillis();
+		return regenCooldown == -1 ? -1 : regenCooldown - System.currentTimeMillis();
 	}
 
 	public void setRegenCooldown(long regenCooldown) {
-		this.regenCooldown = regenCooldown + System.currentTimeMillis();
+		this.regenCooldown = regenCooldown == 0 ? -1 : regenCooldown + System.currentTimeMillis();
 	}
 
 	public Map<String, Relation> getRequestedRelations() {
@@ -652,11 +660,17 @@ public class PlayerFaction extends Faction {
 		while (iterator.hasNext()) {
 			Document document = iterator.next();
 			Document deathbanDocument = document.get("deathban", Document.class);
+			
+			String killerUUID = deathbanDocument.getString("killer_uuid");
+			
 			Deathban deathban = new Deathban(UUID.fromString(document.getString("uuid")),
-					UUID.fromString(deathbanDocument.getString("killer_uuid")),
+					killerUUID == null ? null : UUID.fromString(killerUUID),
 					Methods.deserializeLocation(deathbanDocument.getString("location"), false),
 					0L,
 					deathbanDocument.getString("message"));
+			
+			deathban.setExpireTime(deathbanDocument.getLong("expire_time"));
+			deathban.setDeathTime(deathbanDocument.getLong("death_time"));
 			
 			notRegisteredPlayersDeathbans.put(deathban.getPlayer(), deathban);
 		}

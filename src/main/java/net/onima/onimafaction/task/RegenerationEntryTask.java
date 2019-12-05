@@ -1,6 +1,6 @@
 package net.onima.onimafaction.task;
 
-import java.util.List;
+import java.util.Iterator;
 
 import net.onima.onimaapi.utils.ConfigurationService;
 import net.onima.onimaapi.utils.TaskPerEntry;
@@ -11,7 +11,6 @@ import net.onima.onimafaction.faction.EggAdvantage;
 import net.onima.onimafaction.faction.Faction;
 import net.onima.onimafaction.faction.PlayerFaction;
 import net.onima.onimafaction.faction.claim.Claim;
-import net.onima.onimafaction.faction.struct.DTRStatus;
 import net.onima.onimafaction.faction.struct.EggAdvantageType;
 import net.onima.onimafaction.players.FPlayer;
 
@@ -24,10 +23,14 @@ public class RegenerationEntryTask extends TaskPerEntry<PlayerFaction> {
 	}
 
 	@Override
-	public void run(List<PlayerFaction> list) {
-		for (PlayerFaction faction : list) {
-			if (faction.getDTRStatut() == DTRStatus.REGENERATING) {
-				if (faction.getOnlineMembers(null).isEmpty()) continue;
+	public void run(Iterator<PlayerFaction> iterator) {
+		while (iterator.hasNext()) {
+			PlayerFaction faction = iterator.next();
+			
+			switch (faction.getDTRStatut()) {
+			case REGENERATING:
+				if (faction.getOnlineMembers(null).isEmpty())
+					continue;
 				
 				if (faction.getDtrUpdateTime() > 0) {
 					EggAdvantage egg = faction.getEggAdvantage(EggAdvantageType.DTR_REGEN);
@@ -45,8 +48,15 @@ public class RegenerationEntryTask extends TaskPerEntry<PlayerFaction> {
 					faction.setDTR(faction.getDTR() + ConfigurationService.DTR_TO_ADD_PER_UPDATE * initMultiplier(faction), DTRChangeCause.REGENERATING);
 					faction.setDtrUpdateTime(ConfigurationService.DTR_UPDATE_TIME);
 				}
+				break;
+			case FROZEN:
+				continue;
+			case FULL:
+				iteratorRemove(iterator);
+			default:
+				break;
 			}
-		}	
+		}
 	}
 	
 	private float initMultiplier(PlayerFaction faction) {
@@ -68,10 +78,7 @@ public class RegenerationEntryTask extends TaskPerEntry<PlayerFaction> {
 	}
 	
 	public static void init(OnimaFaction plugin) {
-		regenerationTask = new RegenerationEntryTask();
-		
-		regenerationTask.task(task -> task.runTaskTimerAsynchronously(plugin, 40L, 20L));
-		regenerationTask.insert(PlayerFaction.getPlayersFaction().values());
+		(regenerationTask = new RegenerationEntryTask()).task(task -> task.runTaskTimerAsynchronously(plugin, 40L, 20L));
 	}
 	
 	public static RegenerationEntryTask get() {

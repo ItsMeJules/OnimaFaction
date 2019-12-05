@@ -16,9 +16,11 @@ import net.onima.onimaapi.zone.type.Region;
 import net.onima.onimafaction.events.FactionDTRChangeEvent.DTRChangeCause;
 import net.onima.onimafaction.faction.EggAdvantage;
 import net.onima.onimafaction.faction.PlayerFaction;
+import net.onima.onimafaction.faction.struct.DTRStatus;
 import net.onima.onimafaction.faction.struct.EggAdvantageType;
 import net.onima.onimafaction.players.Deathban;
 import net.onima.onimafaction.players.FPlayer;
+import net.onima.onimafaction.task.RegenerationEntryTask;
 
 public class DeathListener implements Listener {
 	
@@ -50,12 +52,15 @@ public class DeathListener implements Listener {
 						dtr *= modifier;
 					}
 				}
+
+				if (faction.getDTRStatut() != DTRStatus.REGENERATING)
+					RegenerationEntryTask.get().insert(faction);
 				
 				faction.setDTR(faction.getDTR() - dtr, DTRChangeCause.DEATH);
 				faction.setRegenCooldown(ConfigurationService.REGEN_COOLDOWN);
 			}
 			
-			faction.broadcast("§7Membre mort : §e" + fPlayer.getRole().getRole() + fPlayer.getApiPlayer().getName() + ". §7DTR(" + faction.getDTRColour() + faction.getDTR() + "/§f" + faction.getMaxDTR() + "§7) " + (modifier != 0 ? "§7[§6Bonus : §cx" + modifier + "§7] " : "") + ".");
+			faction.broadcast("§7Membre mort : §e" + fPlayer.getRole().getRole() + fPlayer.getApiPlayer().getName() + ". §7DTR(" + faction.getDTRColour() + faction.getDTR() + "§7/§f" + faction.getMaxDTR() + "§7) " + (modifier != 0 ? "§7[§6Bonus : §cx" + modifier + "§7] " : "") + ".");
 		}
 		
 		Balance balance = fPlayer.getApiPlayer().getBalance();

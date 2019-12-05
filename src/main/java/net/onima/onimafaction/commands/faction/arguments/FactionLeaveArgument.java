@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.onima.onimaapi.rank.OnimaPerm;
 import net.onima.onimaapi.utils.JSONMessage;
+import net.onima.onimafaction.OnimaFaction;
 import net.onima.onimafaction.commands.faction.FactionArgument;
 import net.onima.onimafaction.events.FactionPlayerLeaveEvent.LeaveReason;
 import net.onima.onimafaction.faction.PlayerFaction;
@@ -40,6 +41,11 @@ public class FactionLeaveArgument extends FactionArgument {
 		
 		if (!faction.isPermanent()) {
 			if (faction.getMembers().size() == 1) {
+				if (faction.isRaidable() && OnimaFaction.getInstance().getFactionServerEvent() == null) {
+					player.sendMessage("§cVous ne pouvez pas quitter quitter votre faction quand celle-ci est raidable et que vous êtes le seul membre !");
+					return false;
+				}
+				
 				faction.disband(player);
 				Bukkit.broadcastMessage(fPlayer.getApiPlayer().getColoredName(true) + " §7a dissout la faction §d§o" + faction.getName());
 				return true;
