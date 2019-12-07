@@ -13,8 +13,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import net.onima.onimaapi.OnimaAPI;
-import net.onima.onimaapi.saver.mongo.MongoSerializer;
+import net.onima.onimaapi.mongo.saver.MongoSerializer;
 import net.onima.onimaapi.utils.BetterItem;
 import net.onima.onimaapi.utils.ConfigurationService;
 import net.onima.onimaapi.utils.JSONMessage;
@@ -170,7 +169,7 @@ public class Claim extends Region implements MongoSerializer {
 	
 	@Override
 	public boolean isSaved() {
-		return claims.contains(this) && OnimaAPI.getSavers().contains(this);
+		return claims.contains(this);
 	}
 	
 	@Override
@@ -359,13 +358,5 @@ public class Claim extends Region implements MongoSerializer {
 			return priorited;
 		}
 	}
-	
-	
-//	public static void registerFromString(Faction faction, String string) {
-//		String[] info = string.replace("%", "").split(";");
-//			
-//		Claim claim = new Claim(Methods.deserializeLocation(info[0], false), Methods.deserializeLocation(info[1], false), Boolean.valueOf(info[2]), Boolean.valueOf(info[3]), Methods.toDouble(info[4]), faction, Methods.toDouble(info[5]), Methods.toInteger(info[6]));
-//		faction.addClaim(claim, null);
-//	}
 	
 }

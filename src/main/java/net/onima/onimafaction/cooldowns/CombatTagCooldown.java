@@ -3,6 +3,7 @@ package net.onima.onimafaction.cooldowns;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
@@ -122,7 +123,7 @@ public class CombatTagCooldown extends Cooldown implements Listener {
 		}
 	}
 	
-	@EventHandler
+	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 	public void onEntityDamage(EntityDamageByEntityEvent event) {
 		Player attacker = Methods.getLastAttacker(event);
 		Entity entity;

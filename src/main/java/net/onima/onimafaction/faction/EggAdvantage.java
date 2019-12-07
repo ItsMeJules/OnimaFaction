@@ -11,7 +11,7 @@ import org.bson.Document;
 import org.bukkit.Location;
 import org.bukkit.Material;
 
-import net.onima.onimaapi.saver.mongo.MongoSerializer;
+import net.onima.onimaapi.mongo.saver.MongoSerializer;
 import net.onima.onimaapi.utils.Methods;
 import net.onima.onimafaction.faction.claim.Claim;
 import net.onima.onimafaction.faction.struct.EggAdvantageType;

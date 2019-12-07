@@ -16,7 +16,7 @@ import com.google.common.collect.Sets;
 import net.onima.onimaapi.OnimaAPI;
 import net.onima.onimaapi.mongo.api.result.MongoQueryResult;
 import net.onima.onimaapi.rank.RankType;
-import net.onima.onimaapi.saver.mongo.NoSQLSaver;
+import net.onima.onimaapi.mongo.saver.NoSQLSaver;
 import net.onima.onimaapi.utils.ConfigurationService;
 import net.onima.onimaapi.utils.Methods;
 import net.onima.onimaapi.zone.struct.Flag;
@@ -410,8 +410,6 @@ public class Faction implements FlagZone, NoSQLSaver {
 	@Override
 	public void remove() {
 		factions.remove(this);
-		
-		OnimaAPI.getSavers().remove(this);
 	}
 
 	@Override
@@ -464,6 +462,11 @@ public class Faction implements FlagZone, NoSQLSaver {
 				.append("open", open).append("permanent", permanent)
 				.append("flags", flagsToString())
 				.append("claims", claims.stream().map(Claim::getDocument).collect(Collectors.toCollection(() -> new ArrayList<>(claims.size()))));
+	}
+	
+	@Override
+	public boolean shouldDelete() {
+		return !factions.contains(this);
 	}
 	
 	public static Faction getFaction(String name) {

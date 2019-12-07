@@ -279,7 +279,7 @@ public class PvPTimerCooldown extends Cooldown implements Listener {
 			stopPause(apiPlayer);
 	}
 	
-	@EventHandler
+	@EventHandler(priority = EventPriority.HIGH)
 	public void onAttack(EntityDamageByEntityEvent event) {
 		Entity entity = event.getEntity();
 		

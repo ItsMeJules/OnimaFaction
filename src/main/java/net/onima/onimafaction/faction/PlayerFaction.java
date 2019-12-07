@@ -49,6 +49,7 @@ import net.onima.onimafaction.faction.struct.Role;
 import net.onima.onimafaction.players.Deathban;
 import net.onima.onimafaction.players.FPlayer;
 import net.onima.onimafaction.players.OfflineFPlayer;
+import net.onima.onimafaction.task.RegenerationEntryTask;
 
 public class PlayerFaction extends Faction {
 	
@@ -472,7 +473,9 @@ public class PlayerFaction extends Faction {
 		Bukkit.getPluginManager().callEvent(event);
 		if (event.isCancelled()) return;
 		
-		super.remove();
+		remove();
+		
+		RegenerationEntryTask.get().safeRemove(this);
 		
 		for (String allyName : getAllies()) {
 			PlayerFaction ally = (PlayerFaction) Faction.getFaction(allyName);
@@ -539,12 +542,14 @@ public class PlayerFaction extends Faction {
 	@Override
 	public void save() {
 		super.save();
+		
 		PlayerFaction.getPlayersFaction().put(name, this);
 	}
 	
 	@Override
 	public void remove() {
 		super.remove();
+		
 		PlayerFaction.getPlayersFaction().remove(name);
 	}
 	
@@ -602,6 +607,9 @@ public class PlayerFaction extends Faction {
 		
 		dtrUpdateTime = document.getInteger("dtr_update_time");
 		announcement = document.getString("announcement");
+		
+		if (getDTRStatut() != DTRStatus.FULL)
+			RegenerationEntryTask.get().insert(this);
 	}
 	
 	@Override
@@ -626,6 +634,11 @@ public class PlayerFaction extends Faction {
 				.append("requested_relations", requestedRelationsDoc)
 				.append("relations", relationsDoc).append("focused", focused == null ? null : focused.getUniqueId().toString())
 				.append("dtr_update_time", dtrUpdateTime).append("announcement", announcement);
+	}
+	
+	@Override
+	public boolean shouldDelete() {
+		return super.shouldDelete() && !playersFaction.containsKey(name);
 	}
 	
 	public static Map<PlayerFaction, Integer> getByMostPlayersOnline() {

@@ -53,7 +53,7 @@ public class DeathListener implements Listener {
 					}
 				}
 
-				if (faction.getDTRStatut() != DTRStatus.REGENERATING)
+				if (faction.getDTRStatut() == DTRStatus.FULL)
 					RegenerationEntryTask.get().insert(faction);
 				
 				faction.setDTR(faction.getDTR() - dtr, DTRChangeCause.DEATH);

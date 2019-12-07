@@ -8,10 +8,10 @@ import org.bson.Document;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 
+import net.onima.onimaapi.mongo.saver.MongoSerializer;
 import net.onima.onimaapi.players.APIPlayer;
 import net.onima.onimaapi.players.OfflineAPIPlayer;
 import net.onima.onimaapi.rank.RankType;
-import net.onima.onimaapi.saver.mongo.MongoSerializer;
 import net.onima.onimaapi.utils.ConfigurationService;
 import net.onima.onimaapi.utils.Methods;
 import net.onima.onimaapi.utils.time.Time;

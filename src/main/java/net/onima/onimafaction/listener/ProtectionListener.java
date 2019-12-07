@@ -14,12 +14,9 @@ import org.bukkit.projectiles.ProjectileSource;
 import net.onima.onimaapi.utils.Methods;
 import net.onima.onimaapi.zone.struct.Flag;
 import net.onima.onimaapi.zone.type.Region;
-import net.onima.onimafaction.events.FactionDTRChangeEvent;
 import net.onima.onimafaction.faction.PlayerFaction;
 import net.onima.onimafaction.faction.claim.Claim;
-import net.onima.onimafaction.faction.struct.DTRStatus;
 import net.onima.onimafaction.players.FPlayer;
-import net.onima.onimafaction.task.RegenerationEntryTask;
 
 public class ProtectionListener implements Listener {
 	
@@ -74,16 +71,6 @@ public class ProtectionListener implements Listener {
 				}
 			}
 		}
-	}
-	
-	@EventHandler
-	public void onDTRChange(FactionDTRChangeEvent event) {
-		PlayerFaction faction = (PlayerFaction) event.getFaction();
-		
-		if (faction.getDTRStatut() == DTRStatus.REGENERATING)
-			RegenerationEntryTask.get().insert(faction);
-		else
-			RegenerationEntryTask.get().remove(faction);
 	}
 	
 }
