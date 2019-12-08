@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
+import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -100,17 +101,18 @@ public class BattleRoyale extends BukkitRunnable implements FactionServerEvent {
 					if (OnimaPerm.WORLD_BORDER_BYPASS.has(apiPlayer.toPlayer()))
 						continue;
 					
+					Player player = apiPlayer.toPlayer();
 					boolean inStorm = playersInStorm.contains(apiPlayer.getUUID());
 					
-					if (WorldBorder.border(apiPlayer.toPlayer().getLocation()) && !inStorm) {
+					if (WorldBorder.border(player.getLocation()) && !inStorm) {
 						playersInStorm.add(apiPlayer.getUUID());
 						apiPlayer.startCooldown(InsideStormCooldown.class);
 						
 						enteringStormSound.play(apiPlayer);
 						
-						apiPlayer.toPlayer().addPotionEffects(stormEffects);
-						apiPlayer.sendMessage("§d§oVous §cêtes dans la tempête, sortez-en au plus vite !");
-					} else if (!WorldBorder.border(apiPlayer.toPlayer().getLocation()) && inStorm) {
+						player.addPotionEffects(stormEffects);
+						player.sendMessage("§d§oVous §cêtes dans la tempête, sortez-en au plus vite !");
+					} else if (!WorldBorder.border(player.getLocation()) && inStorm) {
 						playersInStorm.remove(apiPlayer.getUUID());
 						apiPlayer.removeCooldown(InsideStormCooldown.class);
 						
@@ -118,7 +120,7 @@ public class BattleRoyale extends BukkitRunnable implements FactionServerEvent {
 						
 						apiPlayer.sendMessage("§d§oVous §aêtes sortit de la tempête, bonne chance !");
 						
-						stormEffects.stream().forEach(effect -> apiPlayer.toPlayer().removePotionEffect(effect.getType()));
+						stormEffects.stream().forEach(effect -> player.removePotionEffect(effect.getType()));
 					}
 					
 					if (inStorm && apiPlayer.getTimeLeft(InsideStormCooldown.class) <= 0L) insideStormSound.play(apiPlayer); 

@@ -51,14 +51,19 @@ public class Deathban implements MongoSerializer {
 	private Location location;
 	private long death, expire;
 	private String deathMessage;
+	private boolean eotwBanned;
 	
 	public Deathban(UUID player, UUID killer, Location location, double deathbanMultiplier, String deathMessage) {
 		this.player = player;
 		this.killer = killer;
 		this.location = location;
 		this.deathMessage = deathMessage;
+
+		if (OnimaFaction.getInstance().getEOTW().isRunning() && OfflineAPIPlayer.getOfflineAPIPlayers().get(player).getRank().getRankType().getValue() < 10)
+			eotwBanned = true;
+		else
+			expire = (long) (System.currentTimeMillis() + getBanTime(player) * deathbanMultiplier);
 		
-		expire = (long) (System.currentTimeMillis() + getBanTime(player) * deathbanMultiplier);
 		death = System.currentTimeMillis();
 	}
 
@@ -98,12 +103,20 @@ public class Deathban implements MongoSerializer {
 		this.deathMessage = deathMessage;
 	}
 	
+	public boolean isEotwDeathban() {
+		return eotwBanned;
+	}
+	
+	public void setEotwBan(boolean eotwBanned) {
+		this.eotwBanned = eotwBanned;
+	}
+	
 	public boolean isActive() {
 		return expire > System.currentTimeMillis();
 	}
 	
 	public void ban() {
-		if (expire <= System.currentTimeMillis())
+		if (expire <= System.currentTimeMillis() && !eotwBanned)
 			return;
 		
 		OfflineAPIPlayer offline = OfflineAPIPlayer.getOfflineAPIPlayers().get(player);
@@ -113,7 +126,7 @@ public class Deathban implements MongoSerializer {
 				if (!offline.isOnline())
 					return;
 				
-				((APIPlayer) offline).toPlayer().kickPlayer(ConfigurationService.DEATHBAN_KICK_MESSAGE.replace("%death-message%", deathMessage).replace("%death-time%", Methods.toFormatDate(death, ConfigurationService.DATE_FORMAT_HOURS)).replace("%time-left%", LongTime.setYMDWHMSFormat(expire - System.currentTimeMillis())));
+				((APIPlayer) offline).toPlayer().kickPlayer(eotwBanned ? ConfigurationService.EOTW_DEATHBANNED : ConfigurationService.DEATHBAN_KICK_MESSAGE.replace("%death-message%", deathMessage).replace("%death-time%", Methods.toFormatDate(death, ConfigurationService.DATE_FORMAT_HOURS)).replace("%time-left%", LongTime.setYMDWHMSFormat(expire - System.currentTimeMillis())));
 			}, 100L);
 		}
 			
@@ -123,7 +136,8 @@ public class Deathban implements MongoSerializer {
 	public Document getDocument(Object... objects) {
 		return new Document("killer_uuid", killer == null ? null : killer.toString())
 				.append("location", Methods.serializeLocation(location, false)).append("death_time", death)
-				.append("expire_time", expire).append("death_message", deathMessage);
+				.append("expire_time", expire).append("death_message", deathMessage)
+				.append("eotw_ban", eotwBanned);
 	}
 	
 	public static long getBanTime(UUID uuid) {

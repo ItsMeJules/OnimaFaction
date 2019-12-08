@@ -16,7 +16,8 @@ public class TimedTask extends BukkitRunnable {
 		this.timedEvent = timedEvent;
 		this.time = time / 1000;
 		this.delay = delay / 1000;
-		initialTime = time;
+		
+		initialTime = this.time;
 	}
 
 	public long getTime() {

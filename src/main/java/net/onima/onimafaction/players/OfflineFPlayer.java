@@ -233,6 +233,7 @@ public class OfflineFPlayer implements NoSQLSaver {
 			
 			deathban.setExpireTime(deathbanDoc.getLong("expire_time"));
 			deathban.setDeathTime(deathbanDoc.getLong("death_time"));
+			deathban.setEotwBan(deathbanDoc.getBoolean("eotw_ban"));
 		}
 	}
 	

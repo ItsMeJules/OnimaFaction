@@ -33,6 +33,7 @@ import net.onima.onimafaction.players.FPlayer;
 public class Claim extends Region implements MongoSerializer {
 	
 	public static final ItemStack CLAIMING_WAND;
+	
 	private static List<Claim> claims;
 	
 	static {
@@ -357,6 +358,10 @@ public class Claim extends Region implements MongoSerializer {
 			
 			return priorited;
 		}
+	}
+	
+	public static List<Claim> getClaims() {
+		return claims;
 	}
 	
 }

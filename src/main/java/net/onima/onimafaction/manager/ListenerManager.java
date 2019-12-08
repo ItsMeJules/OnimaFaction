@@ -9,7 +9,7 @@ import net.onima.onimafaction.listener.BardListener;
 import net.onima.onimafaction.listener.ClaimListener;
 import net.onima.onimafaction.listener.CombatLoggerListener;
 import net.onima.onimafaction.listener.DeathListener;
-import net.onima.onimafaction.listener.DeathbanJoinListener;
+import net.onima.onimafaction.listener.DeathbanListener;
 import net.onima.onimafaction.listener.EggAdvantageListener;
 import net.onima.onimafaction.listener.EntityListener;
 import net.onima.onimafaction.listener.EnvironementListener;
@@ -59,7 +59,7 @@ public class ListenerManager {
 		pm.registerEvents(new DeathListener(), plugin);
 		pm.registerEvents(new PhaseFixListener(), plugin);
 		pm.registerEvents(new PortalTrapFixListener(), plugin);
-		pm.registerEvents(new DeathbanJoinListener(), plugin);
+		pm.registerEvents(new DeathbanListener(), plugin);
 		pm.registerEvents(new WorlChangerListener(), plugin);
 		pm.registerEvents(new EggAdvantageListener(), plugin);
 		pm.registerEvents(new CombatLoggerListener(), plugin);

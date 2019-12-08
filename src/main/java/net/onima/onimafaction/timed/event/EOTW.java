@@ -8,10 +8,13 @@ import net.onima.onimaapi.utils.ConfigurationService;
 import net.onima.onimaapi.utils.Methods;
 import net.onima.onimaapi.utils.OSound;
 import net.onima.onimaapi.utils.time.Time;
+import net.onima.onimaapi.zone.struct.Flag;
+import net.onima.onimaapi.zone.type.Region;
 import net.onima.onimafaction.events.FactionDTRChangeEvent.DTRChangeCause;
 import net.onima.onimafaction.events.server_event.FactionEventServerStartEvent;
 import net.onima.onimafaction.faction.Faction;
 import net.onima.onimafaction.faction.PlayerFaction;
+import net.onima.onimafaction.faction.claim.Claim;
 import net.onima.onimafaction.task.TimedTask;
 import net.onima.onimafaction.timed.FactionServerEvent;
 import net.onima.onimafaction.timed.TimedEvent;
@@ -80,12 +83,22 @@ public class EOTW extends TimedEvent implements FactionServerEvent {
 		case DELAYED:
 			break;
 		case STARTED:
-			Faction.getFactions().stream().filter(faction -> faction instanceof PlayerFaction).forEach(faction -> {
-				PlayerFaction pFaction = (PlayerFaction) faction;
-				
-				pFaction.setDTR(ConfigurationService.MIN_DTR, DTRChangeCause.PLUGIN);
-				pFaction.setRegenCooldown(10 * Time.HOUR);
+			Faction.getFactions().stream().forEach(faction -> {
+				if (faction instanceof PlayerFaction) {
+					PlayerFaction pFaction = (PlayerFaction) faction;
+					
+					pFaction.setDTR(ConfigurationService.MIN_DTR, DTRChangeCause.PLUGIN);
+					pFaction.setRegenCooldown(10 * Time.HOUR);	
+				}
+
+				faction.setFlags(new Flag[0]);
 			});
+			
+			for (Claim claim : Claim.getClaims())
+				claim.setDeathban(true);
+			
+			for (Region region : Region.getRegions())
+				region.setDeathban(true);
 			
 			task = Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, () -> plugin.getBattleRoyale().start(), (timedTask.getTime() - plugin.getBattleRoyale().phasesDuration() / 1000) *20);
 			break;

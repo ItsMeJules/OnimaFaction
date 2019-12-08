@@ -83,6 +83,9 @@ public class PvPTimerCooldown extends Cooldown implements Listener {
 	
 	@Override
 	public void onStart(OfflineAPIPlayer offline, long time) {
+		if (OnimaFaction.getInstance().getEOTW().isRunning())
+			return;
+		
 		super.onStart(offline, time);
 		
 		if (offline.isOnline()) {

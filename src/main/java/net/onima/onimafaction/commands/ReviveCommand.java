@@ -14,6 +14,7 @@ import net.onima.onimaapi.OnimaAPI;
 import net.onima.onimaapi.rank.OnimaPerm;
 import net.onima.onimaapi.utils.JSONMessage;
 import net.onima.onimaapi.utils.Methods;
+import net.onima.onimafaction.players.Deathban;
 import net.onima.onimafaction.players.OfflineFPlayer;
 
 public class ReviveCommand implements CommandExecutor, TabCompleter {
@@ -38,7 +39,9 @@ public class ReviveCommand implements CommandExecutor, TabCompleter {
 				return;
 			}
 			
-			if (offline.getDeathban() == null || !offline.getDeathban().isActive()) {
+			Deathban deathban = offline.getDeathban();
+			
+			if ((deathban == null || !deathban.isActive()) && !deathban.isEotwDeathban()) {
 				sender.sendMessage("§c" + Methods.getName(offline.getOfflineApiPlayer(), true) + " n'est pas deathban !");
 				return;
 			}
