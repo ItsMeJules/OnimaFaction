@@ -14,9 +14,6 @@ public class BattleRoyaleEvent extends Event implements Cancellable {
 	
 	private boolean cancelled;
 	
-	protected BattleRoyaleEvent() {
-	}
-	
 	@Override
 	public HandlerList getHandlers() {
 		return handlers;

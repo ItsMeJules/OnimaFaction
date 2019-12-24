@@ -16,6 +16,7 @@ import net.onima.onimaapi.utils.JSONMessage;
 import net.onima.onimaapi.utils.Methods;
 import net.onima.onimafaction.commands.faction.FactionArgument;
 import net.onima.onimafaction.events.FactionPlayerJoinEvent;
+import net.onima.onimafaction.events.FactionPlayerJoinedEvent;
 import net.onima.onimafaction.faction.Faction;
 import net.onima.onimafaction.faction.PlayerFaction;
 import net.onima.onimafaction.players.FPlayer;
@@ -60,7 +61,7 @@ public class FactionJoinArgument extends FactionArgument {
 		
 		if (!pFac.isOpen() && !pFac.getInvitedPlayers().contains(playerName)) {
 			player.sendMessage("§cVous avez besoin d'une invitation pour rejoindre la faction " + pFac.getName());
-			pFac.broadcast("§d§o" + playerName + " §7§oa essayé de rejoindre votre faction.");
+//			pFac.broadcast("§d§o" + playerName + " §7§oa essayé de rejoindre votre faction.");
 			return false;
 		}
 		
@@ -79,6 +80,7 @@ public class FactionJoinArgument extends FactionArgument {
 		}
 		
 		pFac.getInvitedPlayers().remove(playerName);
+		Bukkit.getPluginManager().callEvent(new FactionPlayerJoinedEvent(fPlayer, faction, false));
 		player.sendMessage("§d§oVous §7avez rejoint la faction §d§o" + faction.getName());
 		return true;
 	}

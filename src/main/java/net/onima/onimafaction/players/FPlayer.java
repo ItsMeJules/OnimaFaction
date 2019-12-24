@@ -128,6 +128,7 @@ public class FPlayer extends OfflineFPlayer {
 			if (clazz.isLoading())
 				return clazz;
 		}
+		
 		return null;
 	}
 	

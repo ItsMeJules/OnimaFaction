@@ -40,6 +40,7 @@ import net.onima.onimafaction.events.FactionDTRChangeEvent.DTRChangeCause;
 import net.onima.onimafaction.events.FactionDisbandEvent;
 import net.onima.onimafaction.events.FactionPlayerLeaveEvent;
 import net.onima.onimafaction.events.FactionPlayerLeaveEvent.LeaveReason;
+import net.onima.onimafaction.events.FactionPlayerLeftEvent;
 import net.onima.onimafaction.faction.claim.Claim;
 import net.onima.onimafaction.faction.struct.Chat;
 import net.onima.onimafaction.faction.struct.DTRStatus;
@@ -219,7 +220,10 @@ public class PlayerFaction extends Faction {
 		offlinePlayer.setFaction(null);
 		offlinePlayer.setRole(Role.NO_ROLE);
 		
-		return members.remove(offlinePlayer.getOfflineApiPlayer().getUUID()) != null;
+		boolean removed = members.remove(offlinePlayer.getOfflineApiPlayer().getUUID()) != null;
+		
+		Bukkit.getPluginManager().callEvent(new FactionPlayerLeftEvent(offlinePlayer, this, reason, kicker));
+		return removed;
 	}
 
 	public OfflinePlayer getMember(String name) {
@@ -404,9 +408,10 @@ public class PlayerFaction extends Faction {
 	}
 	
 	public Relation getRelation(String name) {
-		Relation relation = relations.get(name);
+		if (name.equalsIgnoreCase(this.name))
+			return Relation.MEMBER;
 		
-		if (name.equalsIgnoreCase(this.name)) return Relation.MEMBER;
+		Relation relation = relations.get(name);
 		
 		return relation == null ? Relation.ENEMY : relation;	
 	}
@@ -502,6 +507,8 @@ public class PlayerFaction extends Faction {
 					offlinePlayer.setFaction(null);
 					offlinePlayer.setRole(Role.NO_ROLE);
 					offlinePlayer.setChat(Chat.GLOBAL);
+					
+					Bukkit.getPluginManager().callEvent(new FactionPlayerLeftEvent(offlinePlayer, this, LeaveReason.DISBAND, player));
 				}
 			});
 		}

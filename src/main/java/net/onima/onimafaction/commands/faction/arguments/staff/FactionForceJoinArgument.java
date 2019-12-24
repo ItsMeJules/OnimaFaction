@@ -19,6 +19,7 @@ import net.onima.onimaapi.utils.JSONMessage;
 import net.onima.onimaapi.utils.Methods;
 import net.onima.onimafaction.commands.faction.FactionArgument;
 import net.onima.onimafaction.events.FactionPlayerJoinEvent;
+import net.onima.onimafaction.events.FactionPlayerJoinedEvent;
 import net.onima.onimafaction.faction.Faction;
 import net.onima.onimafaction.faction.PlayerFaction;
 import net.onima.onimafaction.players.FPlayer;
@@ -76,6 +77,7 @@ public class FactionForceJoinArgument extends FactionArgument {
 				}
 				
 				faction.addMember(fPlayer);
+				Bukkit.getPluginManager().callEvent(new FactionPlayerJoinedEvent(fPlayer, faction, false));
 				faction.broadcast("§d§o" + Methods.getRealName(sender) + " §7a forcé §d§o" + fPlayer.getOfflineApiPlayer().getName() + " §7à rejoindre la faction.");
 				player.sendMessage("§d§oVous §7avez forcé §d§o" + Methods.getName(fPlayer.getOfflineApiPlayer(), true) + " §7a rejoindre la faction §d§o" + faction.getName() + "§7.");
 			});
@@ -88,6 +90,7 @@ public class FactionForceJoinArgument extends FactionArgument {
 		if (event.isCancelled()) return false;
 		
 		faction.addMember(fPlayer);
+		Bukkit.getPluginManager().callEvent(new FactionPlayerJoinedEvent(fPlayer, faction, false));
 		faction.broadcast("§d§o" + fPlayer.getOfflineApiPlayer().getName() + " §7a rejoint de force la faction !");
 		
 		return true;

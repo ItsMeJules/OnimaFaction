@@ -32,7 +32,7 @@ import net.onima.onimafaction.events.battle_royale.BattleRoyalePhaseFreezeEvent;
 import net.onima.onimafaction.events.battle_royale.BattleRoyalePhaseShrinkEvent;
 import net.onima.onimafaction.events.battle_royale.BattleRoyalePhaseStartEvent;
 import net.onima.onimafaction.events.battle_royale.BattleRoyalePhaseStopEvent;
-import net.onima.onimafaction.events.battle_royale.BattleRoyaleStartEvent;
+import net.onima.onimafaction.events.battle_royale.BattleRoyaleStartedEvent;
 import net.onima.onimafaction.events.battle_royale.BattleRoyaleStopEvent;
 import net.onima.onimafaction.events.server_event.FactionEventServerStartEvent;
 import net.onima.onimafaction.timed.FactionServerEvent;
@@ -71,23 +71,27 @@ public class BattleRoyale extends BukkitRunnable implements FactionServerEvent {
 		
 		OnimaFaction.getInstance().setFactionServerEvent(this);
 		runTaskTimerAsynchronously(plugin, 0L, 20L);
+		HandlerList.unregisterAll(plugin.getListenerManager().getWorldBorderListener());
 		
-		BattleRoyaleStartEvent event = new BattleRoyaleStartEvent();
+		phases = sortPhases();
+		runningPhase = phases.get(0);
+		
+		BattleRoyaleStartedEvent event = new BattleRoyaleStartedEvent();
 		Bukkit.getPluginManager().callEvent(event);
 		
 		if (event.isCancelled()) {
 			stop();
 			return;
 		}
-		
-		HandlerList.unregisterAll(plugin.getListenerManager().getWorldBorderListener());
-		
-		phases = sortPhases();
-		runningPhase = phases.get(0);
 	}
 	
 	public void stop() {
 		OnimaFaction.getInstance().setFactionServerEvent(null);
+		Bukkit.getPluginManager().registerEvents(plugin.getListenerManager().getWorldBorderListener(), OnimaFaction.getInstance());
+		
+		phases = null;
+		runningPhase = null;
+		
 		cancel();
 	}
 	
