@@ -1,0 +1,44 @@
+name: OnimaFaction
+author: Jestiz
+main: net.onima.onimafaction.OnimaFaction
+version: 1.0
+description: Faction
+depend: [OnimaAPI]
+
+commands:
+  faction:
+    aliases: [fac, f]
+    description: Commande principale pour les factions.
+    permission: onimafaction.faction.command
+  focus:
+    description: Focus un joueur.
+    permission: onimafaction.focus.command
+  teamlocation:
+    aliases: tl
+    description: Envoie sa position dans le f chat.
+    permission: onimafaction.teamlocation.command
+  eotw:
+    description: Lance ou stoppe l'eotw.
+    permission: onimafaction.eotw.command
+  sotw:
+    description: Lance ou stoppe le sotw.
+    permission: onimafaction.sotw.command
+  raidable:
+    description: Lance ou stoppe l'event raidable.
+    permission: onimafaction.raidable.command
+  revive:
+    description: Ressucite un joueur deathban.
+    permission: onimaapi.revive.command
+  logout:
+    description: Se deconnecter en securite.
+    permission: onimaapi.logout.command
+  lives:
+    description: Gere les vies.
+    permission: onimafaction.lives.command
+  staffchat:
+    description: Met en staffchat.
+    aliases: sc
+    permission: onimafaction.staffchat.command
+  pvp:
+    description: Gere le pvp timer.
+    permission: onimafaction.pvp.command
