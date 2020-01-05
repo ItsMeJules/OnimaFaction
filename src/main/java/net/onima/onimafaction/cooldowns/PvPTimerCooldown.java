@@ -219,11 +219,11 @@ public class PvPTimerCooldown extends Cooldown implements Listener {
 			if (remaining > 0) {
 				event.setCancelled(true);
 				
-				List<MetadataValue> value = player.getMetadata(ITEM_PICKUP_MESSAGE_META_KEY);
+				List<MetadataValue> value = player.getMetadata(ITEM_PICKUP_MESSAGE_META_KEY); //Can't be null
 				long now = System.currentTimeMillis();
 				
-				if (value != null && !value.isEmpty() && value.get(0).asLong() - now <= 0L) {
-					player.setMetadata(ITEM_PICKUP_MESSAGE_META_KEY, new FixedMetadataValue(OnimaFaction.getInstance(), now + ITEM_PICKUP_MESSAGE_META_KEY));
+				if (value.isEmpty() || value.get(0).asLong() - now <= 0L) {
+					player.setMetadata(ITEM_PICKUP_MESSAGE_META_KEY, new FixedMetadataValue(OnimaFaction.getInstance(), now + ITEMS_PICKUP_DELAY));
 					player.sendMessage("§cVous ne pouvez pas ramasser cet item pendant §e" + LongTime.setHMSFormat(remaining) + "§c. Votre §epvp timer §cest actif (§e" + LongTime.setHMSFormat(timeLeft) + "§c).");
 				}
 			} else
@@ -343,15 +343,15 @@ public class PvPTimerCooldown extends Cooldown implements Listener {
 		Player player = event.getPlayer();
 		boolean denyTeleport = false;
 		
-		if (getTimeLeft(player.getUniqueId()) >= 0L && toWorld.getEnvironment() == Environment.THE_END)
+		if (getTimeLeft(player.getUniqueId()) > 0L && toWorld.getEnvironment() == Environment.THE_END)
 			denyTeleport = true;
 		
 		if (denyTeleport) {
 			List<MetadataValue> value = player.getMetadata(PORTAL_MESSAGE_META_KEY);
 			long now = System.currentTimeMillis();
 			
-			if (value != null && !value.isEmpty() && value.get(0).asLong() - now <= 0L) {
-				player.setMetadata(PORTAL_MESSAGE_META_KEY, new FixedMetadataValue(OnimaFaction.getInstance(), now + ITEM_PICKUP_MESSAGE_META_KEY));
+			if (value.isEmpty() || value.get(0).asLong() - now <= 0L) {
+				player.setMetadata(PORTAL_MESSAGE_META_KEY, new FixedMetadataValue(OnimaFaction.getInstance(), now + ITEMS_PICKUP_DELAY));
 				player.sendMessage("§cVous ne pouvez pas vous téléporter tant que votre pvp timer est actif.");
 			}
 			

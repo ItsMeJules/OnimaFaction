@@ -4,6 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -12,11 +13,35 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import net.onima.onimaapi.zone.struct.Flag;
+import net.onima.onimaapi.zone.type.Region;
 import net.onima.onimafaction.OnimaFaction;
+import net.onima.onimafaction.faction.claim.Claim;
 import net.onima.onimafaction.listener.EnvironementListener;
-import net.onima.onimafaction.listener.RegionListener;
+import net.onima.onimafaction.players.FPlayer;
 
 public class PhaseFixListener implements Listener {
+	
+	public static int tryToBuild(Entity entity, Location location) {
+		Player player = null;
+		
+		if (entity instanceof Player)
+			player = (Player) entity;
+		else return 0;
+	
+		if (FPlayer.getPlayer(player).hasFactionBypass()) return 1;
+		
+		Region region = Claim.getClaimAndRegionAt(location);
+		
+		if (region.hasFlag(Flag.BREAK_BLOCK))
+			return -1;
+		else if (region.hasFlag(Flag.PLACE_BLOCK))
+			return -2;
+		else if (region.hasFlag(Flag.NO_INTERACT))
+			return -4;
+		
+		return 1;
+	}
 
     @EventHandler
     public void onMove(PlayerInteractEvent event) {
@@ -26,7 +51,7 @@ public class PhaseFixListener implements Listener {
         if (location.getBlock() != null
         		&& location.getBlock().getType() == Material.TRAP_DOOR
         		&& EnvironementListener.tryToBuild(player, location) < 1
-        		&& RegionListener.tryToBuild(player, location) < 1) {
+        		&& tryToBuild(player, location) < 1) {
         	player.teleport(player.getLocation().add(0.0D, 1.0D, 0.0D));
         }
     }

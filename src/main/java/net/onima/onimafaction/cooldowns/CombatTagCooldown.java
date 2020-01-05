@@ -34,7 +34,7 @@ public class CombatTagCooldown extends Cooldown implements Listener {
 
 	@Override
 	public String scoreboardDisplay(long timeLeft) {
-		return "§cCombat tag §6: §c" + LongTime.setHMSFormat(timeLeft);
+		return "§4Combat tag §6: §c" + LongTime.setHMSFormat(timeLeft);
 	}
 	
 	@Override

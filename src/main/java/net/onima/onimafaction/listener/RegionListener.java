@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockBurnEvent;
 import org.bukkit.event.block.BlockFormEvent;
@@ -112,7 +113,9 @@ public class RegionListener implements Listener {
 		Player player = event.getPlayer();
 		Location location = event.getBlock().getLocation();
 		
-		if (tryToBuild(player, location) == -1) {
+		System.out.println(tryToBuild(player, location, Flag.BREAK_BLOCK));
+		
+		if (tryToBuild(player, location, Flag.BREAK_BLOCK) == -1) {
 			player.sendMessage("§cVous ne pouvez pas casser de blocks dans le territoire de " + Claim.getClaimAndRegionAt(location).getDisplayName(player) + "§c.");
 			event.setCancelled(true);
 		}
@@ -123,7 +126,7 @@ public class RegionListener implements Listener {
 		Player player = event.getPlayer();
 		Location location = event.getBlock().getLocation();
 		
-		if (tryToBuild(player, location) == -2) {
+		if (tryToBuild(player, location, Flag.PLACE_BLOCK) == -2) {
 			player.sendMessage("§cVous ne pouvez pas poser de blocks dans le territoire de " + Claim.getClaimAndRegionAt(location).getDisplayName(player) + "§c.");
 			event.setCancelled(true);
 		}
@@ -134,7 +137,7 @@ public class RegionListener implements Listener {
 		Player player = event.getPlayer();
 		Location location = event.getBlockClicked().getLocation();
 		
-		if (tryToBuild(player, location) == -2) {
+		if (tryToBuild(player, location, Flag.PLACE_BLOCK) == -2) {
 			player.sendMessage("§cVous ne pouvez pas vider de seau dans le territoire de " + Claim.getClaimAndRegionAt(location).getDisplayName(player) + "§c.");
 			event.setCancelled(true);
 		}
@@ -145,7 +148,7 @@ public class RegionListener implements Listener {
 		Player player = event.getPlayer();
 		Location location = event.getBlockClicked().getLocation();
 		
-		if (tryToBuild(player, location) == -1) {
+		if (tryToBuild(player, location, Flag.BREAK_BLOCK) == -1) {
 			player.sendMessage("§cVous ne pouvez pas remplir de seau dans le territoire de " + Claim.getClaimAndRegionAt(location).getDisplayName(player) + "§c.");
 			event.setCancelled(true);
 		}
@@ -159,7 +162,7 @@ public class RegionListener implements Listener {
 			Player player = (Player) remover;
 			Location location = event.getEntity().getLocation();
 			
-			if (tryToBuild(player, location) == -1) {
+			if (tryToBuild(player, location, Flag.BREAK_BLOCK) == -1) {
 				player.sendMessage("§cVous ne pouvez pas casser ceci dans le territoire de " + Claim.getClaimAndRegionAt(location).getDisplayName(player) + "§c.");
 				event.setCancelled(true);
 			}
@@ -171,7 +174,7 @@ public class RegionListener implements Listener {
 		Player player = event.getPlayer();
 		Location location = event.getEntity().getLocation();
 		
-		if (tryToBuild(player, location) == -2) {
+		if (tryToBuild(player, location, Flag.PLACE_BLOCK) == -2) {
 			player.sendMessage("§cVous ne pouvez pas placer ceci dans le territoire de " + Claim.getClaimAndRegionAt(location).getDisplayName(player) + "§c.");
 			event.setCancelled(true);
 		}
@@ -188,7 +191,7 @@ public class RegionListener implements Listener {
 			
 			Location location = event.getEntity().getLocation();
 			
-			if (tryToBuild(player, location) == -1) {
+			if (tryToBuild(player, location, Flag.BREAK_BLOCK) == -1) {
 				player.sendMessage("§cVous ne pouvez pas endommager ceci dans le territoire de " + Claim.getClaimAndRegionAt(location).getDisplayName(player) + "§c.");
 				event.setCancelled(true);
 			}
@@ -200,19 +203,33 @@ public class RegionListener implements Listener {
 		Entity entity = event.getRightClicked();
 		
 		if (entity instanceof Hanging) {
-			if (tryToBuild(event.getPlayer(), entity.getLocation()) == -4) 
+			if (tryToBuild(event.getPlayer(), entity.getLocation(), Flag.NO_INTERACT) == -4) 
 				event.setCancelled(true);
 		}
 	}
 	
 	@EventHandler
 	public void onInteract(PlayerInteractEvent event) {
+		Action action = event.getAction();
+		
+		if (action == Action.LEFT_CLICK_BLOCK)
+			return;
+		
 		Player player = event.getPlayer();
 		Block block = event.getClickedBlock();
 		
-		if (block != null && tryToBuild(player, block.getLocation()) == -4) {
-			player.sendMessage("§cVous ne pouvez pas intéragir avec ceci dans le territoire de " + Claim.getClaimAndRegionAt(event.getClickedBlock().getLocation()).getDisplayName(player) + "§c.");
+		if (block != null && tryToBuild(player, block.getLocation(), Flag.NO_INTERACT) == -4) {
 			event.setCancelled(true);
+			
+			List<MetadataValue> value = player.getMetadata("interact-region");
+			long now = System.currentTimeMillis();
+			
+			if (value.isEmpty() || value.get(0).asLong() - now <= 0L) {
+				if (action != Action.PHYSICAL)
+					player.setMetadata("interact-region", new FixedMetadataValue(OnimaFaction.getInstance(), now + 20 * Time.SECOND));
+				
+				player.sendMessage("§cVous ne pouvez pas intéragir avec ceci dans le territoire de " + Claim.getClaimAndRegionAt(event.getClickedBlock().getLocation()).getDisplayName(player) + "§c.");
+			}
 		}
 	}
 	
@@ -265,7 +282,7 @@ public class RegionListener implements Listener {
 			List<MetadataValue> value = player.getMetadata("pickup-region");
 			long now = System.currentTimeMillis();
 			
-			if (value != null && !value.isEmpty() && value.get(0).asLong() - now <= 0L) {
+			if (value.isEmpty() || value.get(0).asLong() - now <= 0L) {
 				player.setMetadata("pickup-region", new FixedMetadataValue(OnimaFaction.getInstance(), now + 20 * Time.SECOND));
 				player.sendMessage("§cVous ne pouvez pas ramasser d'items dans le territoire de " + region.getDisplayName(player) + "§c.");
 			}
@@ -283,7 +300,7 @@ public class RegionListener implements Listener {
 		}
 	}
 	
-	public static int tryToBuild(Entity entity, Location location) {
+	public static int tryToBuild(Entity entity, Location location, Flag flag) {
 		Player player = null;
 		
 		if (entity instanceof Player)
@@ -294,11 +311,11 @@ public class RegionListener implements Listener {
 		
 		Region region = Claim.getClaimAndRegionAt(location);
 		
-		if (region.hasFlag(Flag.BREAK_BLOCK))
+		if (flag == Flag.BREAK_BLOCK && region.hasFlag(Flag.BREAK_BLOCK))
 			return -1;
-		else if (region.hasFlag(Flag.PLACE_BLOCK))
+		else if (flag == Flag.PLACE_BLOCK && region.hasFlag(Flag.PLACE_BLOCK))
 			return -2;
-		else if (region.hasFlag(Flag.NO_INTERACT))
+		else if (flag == Flag.NO_INTERACT && region.hasFlag(Flag.NO_INTERACT))
 			return -4;
 		
 		return 1;

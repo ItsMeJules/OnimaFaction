@@ -183,7 +183,7 @@ public class EntityListener implements Listener {
 		FactionChatEvent chatEvent = new FactionChatEvent(player, faction, toSend, chat, message);
 		Bukkit.getPluginManager().callEvent(chatEvent);
 		
-		if (chatEvent.isCancelled()) 
+		if (chatEvent.isCancelled())
 			return;
 		
 		RankType rank = chatEvent.getRankType();

@@ -22,7 +22,7 @@ public enum EggAdvantageType {
 			"",
 			"§3Niveau maximum : §cV")), //Plus de DTR dans la faction
 	
-	DEATHBAN(10000, 1/3, 1, Material.SIGN, "§cRéduction du deathban",
+	DEATHBAN(10000, 1 / 3, 1, Material.SIGN, "§cRéduction du deathban",
 			Lists.newArrayList("§eNiveau : §c%level%",
 					"§ePrix : §f§o%price%",
 					"§eDescription : §6Réduit le deathban des",

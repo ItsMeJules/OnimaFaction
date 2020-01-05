@@ -101,11 +101,9 @@ public class StaffListener implements Listener {
 			return;
 		}
 		
-		Collection<CommandSender> readers = event.getReaders();
 		Collection<CommandSender> mightSpy = new ArrayList<>(Bukkit.getOnlinePlayers());
 		
 		mightSpy.add(Bukkit.getConsoleSender());
-		mightSpy.removeAll(readers);
 		
 		if (!OnimaPerm.CHAT_FILTER_BYPASS.has(event.getSender()) && OnimaAPI.getInstance().getChatManager().shouldFilter(message)) {
 			if (mightSpy.removeIf(spy -> OnimaPerm.CHAT_FILTER_BYPASS.has(spy)))

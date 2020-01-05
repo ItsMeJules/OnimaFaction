@@ -26,6 +26,7 @@ import net.onima.onimaapi.items.Crowbar.CrowbarBlock;
 import net.onima.onimaapi.utils.BetterItem;
 import net.onima.onimaapi.utils.ConfigurationService;
 import net.onima.onimaapi.utils.OSound;
+import net.onima.onimaapi.zone.struct.Flag;
 import net.onima.onimafaction.faction.claim.Claim;
 
 public class SpawnerListener implements Listener { //TODO Ajouter un message quand un portail de l'end est d�truit dans un claim
@@ -46,7 +47,7 @@ public class SpawnerListener implements Listener { //TODO Ajouter un message qua
 
 			Block block = event.getClickedBlock();
 			
-			if (EnvironementListener.tryToBuild(player, block.getLocation()) < 1 || RegionListener.tryToBuild(player, block.getLocation()) == -1) {
+			if (EnvironementListener.tryToBuild(player, block.getLocation()) < 1 || RegionListener.tryToBuild(player, block.getLocation(), Flag.BREAK_BLOCK) == -1) {
 				player.sendMessage("§cVous ne pouvez pas utiliser votre crowbar dans le territoire de " + Claim.getClaimAndRegionAt(block.getLocation()).getDisplayName(player));
 				return;
 			}
