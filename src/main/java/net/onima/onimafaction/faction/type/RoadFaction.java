@@ -22,7 +22,7 @@ public class RoadFaction extends Faction {
 	public RoadFaction(String name) {
 		super(name);
 		
-		setFlags(new Flag[0]);
+		setFlags(Flag.LIQUID_FLOW);
 	}
 
 	@Override

@@ -57,8 +57,8 @@ public class Bard extends ArmorClass {
 		SATURATION_BUFF.setClickEffect(new PotionEffect(PotionEffectType.SATURATION, 10 * 20, 1));
 		FORCE_BUFF.setClickEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 5 * 20, 1));
 		SPEED_BUFF.setClickEffect(new PotionEffect(PotionEffectType.SPEED, 5 * 20, 2));
-		JUMP_BUFF.setClickEffect(new PotionEffect(PotionEffectType.JUMP, 10 * 20, 4));
-		RESISTANCE_BUFF.setClickEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 5 * 20, 1));
+		JUMP_BUFF.setClickEffect(new PotionEffect(PotionEffectType.JUMP, 10 * 20, 5));
+		RESISTANCE_BUFF.setClickEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 5 * 20, 2));
 		FIRE_RES_BUFF.setClickEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 20 * 20, 0));
 		REGEN_BUFF.setClickEffect(new PotionEffect(PotionEffectType.REGENERATION, 10 * 20, 1));
 		WITHER_BUFF.setClickEffect(new PotionEffect(PotionEffectType.WITHER, 5 * 20, 1));

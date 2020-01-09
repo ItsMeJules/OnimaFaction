@@ -18,7 +18,7 @@ public class SafeZoneFaction extends Faction {
 	public SafeZoneFaction() {
 		super("Spawn");
 		
-		setFlags(Flag.COMBAT_SAFE, Flag.COMBAT_TAG_DENY_ENTRY, Flag.DENY_ENDERPEARL, Flag.NO_BARDING, Flag.PVP_TIMER_PAUSE, Flag.SAFE_DISCONNECT);
+		setFlags(Flag.COMBAT_SAFE, Flag.COMBAT_TAG_DENY_ENTRY, Flag.DENY_ENDERPEARL, Flag.NO_BARDING, Flag.PVP_TIMER_PAUSE, Flag.SAFE_DISCONNECT, Flag.LIQUID_FLOW);
 		
 		for (World world : Bukkit.getWorlds()) {
 			Environment environment = world.getEnvironment();

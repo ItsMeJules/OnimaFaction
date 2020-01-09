@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Hanging;
@@ -15,6 +16,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockBurnEvent;
 import org.bukkit.event.block.BlockFormEvent;
+import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -32,12 +34,15 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 
+import net.onima.onimaapi.crates.SupplyCrate;
+import net.onima.onimaapi.crates.utils.Crate;
 import net.onima.onimaapi.event.region.PlayerRegionChangeEvent;
 import net.onima.onimaapi.event.region.PlayerRegionChangeEvent.PlayerRegionChangementCause;
 import net.onima.onimaapi.event.region.RegionChangeEvent;
 import net.onima.onimaapi.event.region.RegionChangeEvent.RegionChangeCause;
 import net.onima.onimaapi.players.APIPlayer;
 import net.onima.onimaapi.utils.Methods;
+import net.onima.onimaapi.utils.WorldChanger;
 import net.onima.onimaapi.utils.time.Time;
 import net.onima.onimaapi.zone.struct.Flag;
 import net.onima.onimaapi.zone.type.Region;
@@ -112,8 +117,6 @@ public class RegionListener implements Listener {
 	public void onBlockBreak(BlockBreakEvent event) {
 		Player player = event.getPlayer();
 		Location location = event.getBlock().getLocation();
-		
-		System.out.println(tryToBuild(player, location, Flag.BREAK_BLOCK));
 		
 		if (tryToBuild(player, location, Flag.BREAK_BLOCK) == -1) {
 			player.sendMessage("§cVous ne pouvez pas casser de blocks dans le territoire de " + Claim.getClaimAndRegionAt(location).getDisplayName(player) + "§c.");
@@ -219,13 +222,22 @@ public class RegionListener implements Listener {
 		Block block = event.getClickedBlock();
 		
 		if (block != null && tryToBuild(player, block.getLocation(), Flag.NO_INTERACT) == -4) {
+			if (action == Action.RIGHT_CLICK_BLOCK) {
+				SupplyCrate crate = null;
+				
+				if ((crate = SupplyCrate.getDroppedByLocation(block.getLocation())) != null) {
+					crate.open(APIPlayer.getPlayer(player), Crate.NO_BOOSTER);
+					return;
+				}
+			}
+			
 			event.setCancelled(true);
 			
 			List<MetadataValue> value = player.getMetadata("interact-region");
 			long now = System.currentTimeMillis();
 			
 			if (value.isEmpty() || value.get(0).asLong() - now <= 0L) {
-				if (action != Action.PHYSICAL)
+				if (action == Action.PHYSICAL)
 					player.setMetadata("interact-region", new FixedMetadataValue(OnimaFaction.getInstance(), now + 20 * Time.SECOND));
 				
 				player.sendMessage("§cVous ne pouvez pas intéragir avec ceci dans le territoire de " + Claim.getClaimAndRegionAt(event.getClickedBlock().getLocation()).getDisplayName(player) + "§c.");
@@ -300,6 +312,14 @@ public class RegionListener implements Listener {
 		}
 	}
 	
+	@EventHandler
+	public void onFlow(BlockFromToEvent event) {
+		Region region = Claim.getClaimAndRegionAt(event.getToBlock().getLocation());
+		
+		if (region.hasFlag(Flag.LIQUID_FLOW) && event.getBlock().isLiquid())
+			event.setCancelled(true);
+	}
+	
 	public static int tryToBuild(Entity entity, Location location, Flag flag) {
 		Player player = null;
 		
@@ -326,6 +346,13 @@ public class RegionListener implements Listener {
 		Location from = event.getFrom(), to = event.getTo();
 		
 		if (from.getBlockX() == to.getBlockX() && from.getBlockY() == to.getBlockY() && from.getBlockZ() == to.getBlockZ()) return;
+		
+		if (to.getWorld().getEnvironment() == World.Environment.THE_END && WorldChanger.getEndExit() != null && WorldChanger.getEndExit().contains(to)) {
+			WorldChanger changer = WorldChanger.getChanger("world_the_end", "world");
+			
+			player.teleport(changer != null ? changer.getSpawnLocation() : Bukkit.getWorld("world").getSpawnLocation());
+			return;
+		}
 		
 		Region fromRegion = Claim.getClaimAndRegionAt(from);
 		Region toRegion = Claim.getClaimAndRegionAt(to);

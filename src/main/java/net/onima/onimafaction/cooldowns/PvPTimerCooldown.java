@@ -86,8 +86,6 @@ public class PvPTimerCooldown extends Cooldown implements Listener {
 		if (OnimaFaction.getInstance().getEOTW().isRunning())
 			return;
 		
-		super.onStart(offline, time);
-		
 		if (offline.isOnline()) {
 			APIPlayer apiPlayer = (APIPlayer) offline;
 			Player player = apiPlayer.toPlayer();
@@ -98,8 +96,11 @@ public class PvPTimerCooldown extends Cooldown implements Listener {
 			if (!(region instanceof WildernessClaim) && region.hasFlag(Flag.PVP_TIMER_PAUSE)) {
 				apiPlayer.sendMessage("§7Tant que vous restez dans " + region.getDisplayName(player) + "§7, votre pvp timer sera en §apause§7.");
 				super.startPause(apiPlayer);
+				super.getData(offline.getUUID()).setTimeLeft(duration + 100L); //Addind 100ms so it looks like 30:00
 			}
 		}
+		
+		super.onStart(offline, time);
 	}
 	
 	@Override
@@ -233,7 +234,7 @@ public class PvPTimerCooldown extends Cooldown implements Listener {
 	
 	@EventHandler
 	public void onQuit(PlayerQuitEvent event) {
-		if (getTimeLeft(event.getPlayer().getUniqueId()) > 0L)
+		if (getTimeLeft(event.getPlayer().getUniqueId()) > 0L && !isPaused(event.getPlayer().getUniqueId()))
 			startPause(APIPlayer.getPlayer(event.getPlayer()));
 	}
 	
@@ -250,7 +251,7 @@ public class PvPTimerCooldown extends Cooldown implements Listener {
 		 
 		long timeLeft = getTimeLeft(player.getUniqueId());
 		
-		if (!(region instanceof WildernessClaim) && region.hasFlag(Flag.PVP_TIMER_PAUSE) && timeLeft > 0L)
+		if (!(region instanceof WildernessClaim) && region.hasFlag(Flag.PVP_TIMER_PAUSE) && timeLeft > 0L && !isPaused(player.getUniqueId()))
 			startPause(apiPlayer);
 		else if (timeLeft > 0L && isPaused(player.getUniqueId()))
 			stopPause(apiPlayer);

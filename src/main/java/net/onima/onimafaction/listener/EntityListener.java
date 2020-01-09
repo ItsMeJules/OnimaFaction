@@ -27,6 +27,7 @@ import net.onima.onimaapi.OnimaAPI;
 import net.onima.onimaapi.rank.OnimaPerm;
 import net.onima.onimaapi.rank.RankType;
 import net.onima.onimaapi.utils.ConfigurationService;
+import net.onima.onimaapi.utils.WorldChanger;
 import net.onima.onimaapi.zone.type.Region;
 import net.onima.onimafaction.events.FactionChatEvent;
 import net.onima.onimafaction.faction.Faction;
@@ -90,8 +91,10 @@ public class EntityListener implements Listener {
 			Faction fromFaction = Claim.getClaimAt(from).getFaction();
 			
 			if (fromFaction.isSafeZone()) {
+				WorldChanger changer = WorldChanger.getChanger(from.getWorld().getName(), to.getWorld().getName());
+				
 				event.useTravelAgent(false);
-				event.setTo(to.getWorld().getSpawnLocation());
+				event.setTo(changer != null ? changer.getSpawnLocation() : to.getWorld().getSpawnLocation());
 				player.sendMessage("§d§oVous §7avez été téléporté au spawn.");
 				return;
 			}
@@ -107,8 +110,8 @@ public class EntityListener implements Listener {
 				if (!(region instanceof WildernessClaim)) {
 					PlayerFaction playerFaction = FPlayer.getPlayer(player).getFaction();
 					
-					if (!region.getDisplayName(player).equalsIgnoreCase(playerFaction.getDisplayName(player))) {
-						player.sendMessage("§cCe portail aurait été créé dans le territoire de " + region.getDisplayName(player) + ", téléportation annulée...");
+					if (playerFaction == null || !region.getDisplayName(player).equalsIgnoreCase(playerFaction.getDisplayName(player))) {
+						player.sendMessage("§cCe portail aurait été créé dans le territoire de " + region.getDisplayName(player) + "§c, téléportation annulée...");
 						event.setCancelled(true);
 					}
 				}

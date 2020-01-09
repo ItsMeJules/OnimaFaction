@@ -42,8 +42,8 @@ import net.onima.onimafaction.faction.claim.Claim;
 import net.onima.onimafaction.faction.claim.WildernessClaim;
 import net.onima.onimafaction.players.FPlayer;
 
-public class EnvironementListener implements Listener {
-	
+public class EnvironementListener implements Listener { //TODO Empecher l'eau/lave de s'étendre dans un claim ennemie s'il a été posé par un joueur étrangé au claim.
+
 	private static List<Material> INTERACTABLES_MAT;
 	
 	static {
@@ -66,25 +66,32 @@ public class EnvironementListener implements Listener {
 			return;
 		}
 		
-		if (canBuild < 1 && action == Action.RIGHT_CLICK_BLOCK) {
-			if (factionAt.isSafeZone() || factionAt.isRoad()) {
-				if (ConfigurationService.SPAWN_INTERACTABLES_BLOCKS.contains(block.getType())) 
-					canBuild = 1;
-			} else if (!factionAt.isWilderness()) {
-				if (ConfigurationService.NOT_CLAIM_INTERACTABLES_BLOCKS.contains(block.getType()))
-					canBuild = 1;
+		if (action == Action.RIGHT_CLICK_BLOCK) {
+			if (canBuild < 1) {
+				if (factionAt.isSafeZone() || factionAt.isRoad()) {
+					if (ConfigurationService.SPAWN_INTERACTABLES_BLOCKS.contains(block.getType())) 
+						canBuild = 1;
+				} else if (!factionAt.isWilderness()) {
+					if (ConfigurationService.NOT_CLAIM_INTERACTABLES_BLOCKS.contains(block.getType()))
+						canBuild = 1;
+					
+					SupplyCrate crate = null;
+					
+					if ((crate = SupplyCrate.getDroppedByLocation(block.getLocation())) != null) {
+						crate.open(APIPlayer.getPlayer(player), Crate.NO_BOOSTER);
+						canBuild = 1;
+					}
+				}
 				
+				if (canBuild < 1 && INTERACTABLES_MAT.contains(block.getType())) {
+					event.setCancelled(true);
+					player.sendMessage("§cVous ne pouvez pas intéragir avec ceci dans le territoire de " + factionAt.getDisplayName(player) + "§c.");
+				}
+			} else {
 				SupplyCrate crate = null;
 				
-				if ((crate = SupplyCrate.getDroppedByLocation(block.getLocation())) != null) {
+				if ((crate = SupplyCrate.getDroppedByLocation(block.getLocation())) != null)
 					crate.open(APIPlayer.getPlayer(player), Crate.NO_BOOSTER);
-					canBuild = 1;
-				}
-			}
-			
-			if (canBuild < 1 && INTERACTABLES_MAT.contains(block.getType())) {
-				event.setCancelled(true);
-				player.sendMessage("§cVous ne pouvez pas intéragir avec ceci dans le territoire de " + factionAt.getDisplayName(player) + "§c.");
 			}
 		}
 	}

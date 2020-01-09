@@ -18,7 +18,7 @@ public class WarZoneFaction extends Faction {
 	public WarZoneFaction() {
 		super("Octogone");
 		
-		setFlags(new Flag[0]);
+		setFlags(Flag.LIQUID_FLOW);
 		
 		for (World world : Bukkit.getWorlds())
 			addClaim(new Claim(this, new Location(world, -300, 0, -300), new Location(world, 300, 256, 300)), null);
