@@ -9,6 +9,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 
 import net.onima.onimaapi.cooldown.utils.Cooldown;
+import net.onima.onimaapi.event.disguise.PlayerPreDisguiseEvent;
 import net.onima.onimaapi.event.region.PlayerRegionChangeEvent;
 import net.onima.onimaapi.fakeblock.FakeType;
 import net.onima.onimaapi.players.APIPlayer;
@@ -164,6 +165,17 @@ public class CombatTagCooldown extends Cooldown implements Listener {
 	@EventHandler
 	public void onRespawn(PlayerRespawnEvent event) {
 		onCancel(APIPlayer.getPlayer(event.getPlayer()));
+	}
+	
+	@EventHandler
+	public void onPreDisguise(PlayerPreDisguiseEvent event) {
+		APIPlayer apiPlayer = event.getAPIPlayer();
+		
+		if (getTimeLeft(apiPlayer.getUUID()) <= 0L)
+			return;
+		
+		apiPlayer.sendMessage("§cVous ne pouvez pas vous déguiser en combat !");
+		event.setCancelled(true);
 	}
 
 }

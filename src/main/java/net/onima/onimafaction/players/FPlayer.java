@@ -81,6 +81,9 @@ public class FPlayer extends OfflineFPlayer {
 		
 		if (PlayerFaction.getNotRegisteredPlayersDeathban().containsKey(apiPlayer.getUUID()))
 			PlayerFaction.getNotRegisteredPlayersDeathban().put(apiPlayer.getUUID(), deathban);
+		
+		if (fMap)
+			Bukkit.getScheduler().runTaskLater(OnimaFaction.getInstance(), () -> setfMap(true, true), 10L);
 	}
 	
 	public APIPlayer getApiPlayer() {
@@ -181,6 +184,10 @@ public class FPlayer extends OfflineFPlayer {
 			
 			if (toMap.isEmpty() && message) {
 				apiPlayer.sendMessage("§cIl n'y a pas de claims dans un rayon de 50 blocks autour de vous.");
+				
+				if (super.fMap)
+					super.fMap = false;
+				
 				return;
 			}
 			
@@ -196,14 +203,13 @@ public class FPlayer extends OfflineFPlayer {
 					apiPlayer.sendMessage(claim.getDisplayName(apiPlayer.toPlayer()) + " §7possède §e" + claim.getName() + " §7(affiché avec §e" + Methods.getItemName(new ItemStack(FakeBlockData.CLAIM_MAP_BLOCKS_DATA[count].getItemType())) + "§7)");
 			}
 			
-			Bukkit.getScheduler().runTaskAsynchronously(OnimaFaction.getInstance(), () -> {
-				FakeBlock.generate(apiPlayer, toGenerate);
-			});
+			Bukkit.getScheduler().runTaskAsynchronously(OnimaFaction.getInstance(), () -> FakeBlock.generate(apiPlayer, toGenerate));
 			
 			
 		} else {
 			if (message)
 				apiPlayer.sendMessage("§ePillers de claim disparu.");
+			
 			apiPlayer.removeFakeBlockByType(FakeType.CLAIM_MAP);
 			setfMap(false);
 		}

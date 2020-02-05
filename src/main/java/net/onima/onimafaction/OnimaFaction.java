@@ -42,22 +42,24 @@ import net.onima.onimafaction.manager.CommandManager;
 import net.onima.onimafaction.manager.ListenerManager;
 import net.onima.onimafaction.players.FPlayer;
 import net.onima.onimafaction.players.OfflineFPlayer;
-import net.onima.onimafaction.task.RegenerationEntryTask;
-import net.onima.onimafaction.task.SecondTask;
+import net.onima.onimafaction.task.BardPowerTask;
 import net.onima.onimafaction.timed.FactionServerEvent;
 import net.onima.onimafaction.timed.event.BattleRoyale;
 import net.onima.onimafaction.timed.event.EOTW;
 import net.onima.onimafaction.timed.event.SOTW;
+import net.onima.onimafaction.workload.manager.WorkloadManager;
 
 public class OnimaFaction extends JavaPlugin {
 	
 	private static OnimaFaction instance;
+	
 	private ListenerManager listenerManager;
 	private CommandManager commandManager;
 	private EOTW eotw;
 	private SOTW sotw;
 	private BattleRoyale battleRoyale;
 	private FactionServerEvent factionServerEvent;
+	private WorkloadManager workloadManager;
 	
 	@Override
 	public void onEnable() {
@@ -76,9 +78,9 @@ public class OnimaFaction extends JavaPlugin {
 	private void registerManager() {
 		(listenerManager = new ListenerManager(this)).registerListener();
 		(commandManager = new CommandManager(this)).registerCommands();
-		
-		RegenerationEntryTask.init(this);
-		new SecondTask().runTaskTimerAsynchronously(this, 40L, 20L);
+		(workloadManager = new WorkloadManager(OnimaAPI.getDistributor())).registerWorkloads();
+		new BardPowerTask().runTaskTimerAsynchronously(this, 40L, 20L);
+//		new FastPlantTask().runTaskTimer(this, 40L, 20L);
 		
 		eotw = new EOTW(4 * Time.HOUR, 30 * Time.MINUTE);
 		sotw = new SOTW(3 * Time.HOUR, 15 * Time.MINUTE);
@@ -155,6 +157,10 @@ public class OnimaFaction extends JavaPlugin {
 	
 	public void setFactionServerEvent(FactionServerEvent factionServerEvent) {
 		this.factionServerEvent = factionServerEvent;
+	}
+	
+	public WorkloadManager getWorkloadManager() {
+		return workloadManager;
 	}
 	
 	public static String getDisplay(OfflineFPlayer offlineFPlayer, OfflineFPlayer viewer) {

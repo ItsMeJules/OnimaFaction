@@ -20,6 +20,8 @@ import net.onima.onimaapi.players.OfflineAPIPlayer;
 import net.onima.onimaapi.utils.ConfigurationService;
 import net.onima.onimaapi.utils.time.Time;
 import net.onima.onimaapi.utils.time.Time.LongTime;
+import net.onima.onimaapi.zone.struct.Flag;
+import net.onima.onimaapi.zone.type.Region;
 import net.onima.onimafaction.faction.Faction;
 import net.onima.onimafaction.faction.StuckRequest;
 import net.onima.onimafaction.faction.claim.Claim;
@@ -32,13 +34,18 @@ public class FactionStuckCooldown extends Cooldown implements Listener {
 
 	static {
 		CAN_F_STUCK = fPlayer -> {
-			Faction factionAt = Claim.getClaimAt(fPlayer.getApiPlayer().toPlayer().getLocation()).getFaction();
+			Region region = Claim.getClaimAndRegionAt(fPlayer.getApiPlayer().toPlayer().getLocation());
 			
-			if (!(factionAt.isWilderness() || factionAt.isRoad() || factionAt.isSafeZone())) {
-				if (!fPlayer.hasFaction())
-					return true;
-				else return !fPlayer.getFaction().getName().equalsIgnoreCase(factionAt.getName());
-			}
+			if (region instanceof Claim) {
+				Faction factionAt = ((Claim) region).getFaction();
+				
+				if (!(factionAt.isWilderness() || factionAt.isRoad() || factionAt.isSafeZone())) {
+					if (!fPlayer.hasFaction())
+						return true;
+					else return !fPlayer.getFaction().getName().equalsIgnoreCase(factionAt.getName());
+				}
+			} else if (region.hasFlags(Flag.BREAK_BLOCK, Flag.PLACE_BLOCK))
+				return true;
 			
 			return false;
 		};

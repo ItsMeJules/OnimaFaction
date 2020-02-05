@@ -1,8 +1,11 @@
 package net.onima.onimafaction.faction.claim;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
@@ -14,6 +17,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import net.onima.onimaapi.mongo.saver.MongoSerializer;
+import net.onima.onimaapi.rank.RankType;
 import net.onima.onimaapi.utils.BetterItem;
 import net.onima.onimaapi.utils.ConfigurationService;
 import net.onima.onimaapi.utils.JSONMessage;
@@ -28,6 +32,7 @@ import net.onima.onimafaction.faction.Faction;
 import net.onima.onimafaction.faction.PlayerFaction;
 import net.onima.onimafaction.faction.struct.EggAdvantageType;
 import net.onima.onimafaction.faction.type.WildernessFaction;
+import net.onima.onimafaction.plants.FastPlant;
 import net.onima.onimafaction.players.FPlayer;
 
 public class Claim extends Region implements MongoSerializer {
@@ -44,9 +49,24 @@ public class Claim extends Region implements MongoSerializer {
 	private Faction faction;
 	private double price;
 	private List<EggAdvantage> eggAdvantages;
+	private Set<FastPlant> fastPlants;
 	
 	{
 		eggAdvantages = new ArrayList<>();
+		fastPlants = new TreeSet<FastPlant>(new Comparator<FastPlant>() {
+			@Override
+			public int compare(FastPlant f1, FastPlant f2) {
+				int i = f1.getPlantLocation().getBlockX() + f1.getPlantLocation().getBlockY() + f1.getPlantLocation().getBlockZ();
+				int j = f2.getPlantLocation().getBlockX() + f2.getPlantLocation().getBlockY() + f2.getPlantLocation().getBlockZ();
+				
+				if (i > j)
+					return -1;
+				else if (i < j)
+					return 1;
+				else
+					return 0;
+			}
+		});
 	}
 	
 	public Claim(Faction faction, String creator, double price, Location location1, Location location2) {
@@ -181,7 +201,7 @@ public class Claim extends Region implements MongoSerializer {
 				.append("location_2", Methods.serializeLocation(getLocation2(), false))
 				.append("deathban", deathban).append("dtr_loss", dtrLoss)
 				.append("priority", priority).append("deathban_multiplier", deathbanMultiplier)
-				.append("acces_rank", accessRank == null ? null : accessRank.name())
+				.append("acces_rank", accessRank == null ? RankType.DEFAULT : accessRank.name())
 				.append("eggs", eggAdvantages.stream().map(EggAdvantage::getDocument).collect(Collectors.toCollection(() -> new ArrayList<>(eggAdvantages.size()))));
 	}
 	
@@ -282,6 +302,10 @@ public class Claim extends Region implements MongoSerializer {
 		return true;
 	}
 	
+	public Set<FastPlant> getFastPlants() {
+		return fastPlants;
+	}
+	
 	public static boolean canSelectHere(Player player, Location location, boolean sendMessage) {
 		if (!ConfigurationService.CLAIMABLE_WORLD.contains(location.getWorld().getName())) {
 			if (sendMessage) player.sendMessage("§cVous ne pouvez pas claim dans ce monde.");
@@ -363,5 +387,5 @@ public class Claim extends Region implements MongoSerializer {
 	public static List<Claim> getClaims() {
 		return claims;
 	}
-	
+
 }

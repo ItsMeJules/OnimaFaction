@@ -35,6 +35,9 @@ public class EggAdvantageMenu extends PacketMenu {
 		PlayerFaction faction = fPlayer.getFaction();
 		
 		for (EggAdvantageType type : EggAdvantageType.values()) {
+			if (type == EggAdvantageType.CROPS)
+				continue;
+			
 			BetterItem item = new BetterItem(type.getMaterial(), 1);
 			
 			for (EggAdvantage egg : eggs) {

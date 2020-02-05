@@ -39,7 +39,7 @@ public class ArcherSpeedCooldown extends Cooldown implements Listener {
 				else {
 					APIPlayer apiPlayer = APIPlayer.getPlayer(player);
 					
-					Methods.removeOneItem(player);
+					Methods.removeOneHandItem(player);
 					onStart(apiPlayer);
 					
 					useSound.play(apiPlayer);

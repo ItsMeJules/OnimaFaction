@@ -60,7 +60,7 @@ public class Reaper extends ArmorClass {
 				else {
 					Location loc = player.getLocation();
 					
-					Methods.removeOneItem(player);
+					Methods.removeOneHandItem(player);
 					circleParticles(1, 1, 0.1, loc.clone().add(0, 0.25, 0));
 					circleParticles(1, 1, 0.1, loc.clone().add(0, 1, 0));
 					circleParticles(1, 1, 0.1, loc.clone().add(0, 1.75, 0));

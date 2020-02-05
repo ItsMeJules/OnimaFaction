@@ -13,7 +13,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockFromToEvent;
-import org.bukkit.event.block.BlockGrowEvent;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -36,6 +35,44 @@ public class EggAdvantageListener implements Listener { //TODO EggAdvantageRemov
 	@EventHandler
 	public void onPlace(BlockPlaceEvent event) {
 		Block block = event.getBlock();
+		Location location = block.getLocation();
+//		Faction faction = Claim.getClaimAt(block.getLocation()).getFaction();
+//		
+//		if (block.getType() == Material.DIAMOND_BLOCK && faction instanceof PlayerFaction && ((PlayerFaction) faction).getEggAdvantage(EggAdvantageType.CROPS).getAmount() != 0) {
+//			for (BlockFace face : new BlockFace[] {BlockFace.NORTH, BlockFace.UP, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST}) {
+//				Block relative = block.getRelative(face);
+//				
+//				if (EggAdvantage.getGrowingBlocks().contains(relative.getType())) {
+//					Block up = relative.getRelative(BlockFace.UP);
+//					PlantType plantType = PlantType.fromSeed(up.getType());
+//					
+//					if (plantType == null || FastPlant.getByLocation(up.getLocation()) != null)
+//						continue;
+//					
+//					FastPlant plant = null;
+//					
+//					switch (plantType) {
+//					case MELON:
+//						plant = new WaterMelonFastPlant(up.getLocation());
+//						break;
+//					case PUMPKIN:
+//						plant = new PumpkinFastPlant(up.getLocation());
+//						break;
+//					case SUGAR_CANE:
+//						plant = new BambooFastPlant(up.getLocation());
+//						break;
+//					case NETHER_WART:
+//						plant = new NetherWartFastPlant(up.getLocation());
+//						break;
+//					default:
+//						plant = new FastPlant(plantType, up.getLocation(), FastPlant.DEFAULT_HARVEST_TIME);
+//						break;
+//					}
+//					
+//					plant.save();
+//				}
+//			}
+//		}
 		
 		if (block.getType() != Material.DRAGON_EGG)
 			return;
@@ -49,8 +86,6 @@ public class EggAdvantageListener implements Listener { //TODO EggAdvantageRemov
 			return;
 		}
 		
-		Location location = block.getLocation();
-		
 		if (!fPlayer.getFaction().getName().equalsIgnoreCase(Claim.getClaimAt(location).getFaction().getName()) && !fPlayer.hasFactionBypass()) {
 			player.sendMessage("§cVous pouvez seulement poser cet oeuf dans vos claims !");
 			event.setCancelled(true);
@@ -61,9 +96,8 @@ public class EggAdvantageListener implements Listener { //TODO EggAdvantageRemov
 			player.sendMessage("§cL'oeuf peut seulement être posé sur un block d'émeraude !");
 			event.setCancelled(true);
 			return;
-		} else {
+		} else
 			fPlayer.getApiPlayer().openMenu(new EggAdvantageMenu(fPlayer, location));
-		}
 	}
 
 	@EventHandler
@@ -205,26 +239,13 @@ public class EggAdvantageListener implements Listener { //TODO EggAdvantageRemov
 			checkPiston(event, block);
 	}
 	
-	@SuppressWarnings("deprecation")
-	@EventHandler
-	public void onBlockGrowth(BlockGrowEvent event) {
-		Block block = event.getBlock();
-		Claim claim = Claim.getClaimAt(block.getLocation());
-		
-		if (!(claim.getFaction() instanceof PlayerFaction))
-			return;
-		
-		EggAdvantage egg = claim.getEggAdvantage(EggAdvantageType.CROPS);
-		
-		if (egg != null) {
-			byte nextData = (byte) (block.getData() + (egg.getAmount() - 1 + egg.getType().getChanger()));
-			
-			if (nextData > 9)
-				nextData = 9;
-			
-			block.setData((byte) nextData);
-		}
-	}
+//	@EventHandler
+//	public void onBlockGrowth(BlockGrowEvent event) {
+//		Block block = event.getBlock();
+//
+//		if (block != null && FastPlant.getByLocation(block.getLocation()) != null)
+//			event.setCancelled(true);
+//	}
 	
 	@EventHandler
 	public void onEggRemove(EggAdvantageRemovedEvent event) {

@@ -42,3 +42,6 @@ commands:
   pvp:
     description: Gere le pvp timer.
     permission: onimafaction.pvp.command
+  fastplant:
+    description: Gère les fastplant.
+    permission: onimafaction.fastplant.command

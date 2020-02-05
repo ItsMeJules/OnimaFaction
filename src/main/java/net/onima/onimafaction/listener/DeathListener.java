@@ -8,11 +8,13 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 
+import net.onima.onimaapi.OnimaAPI;
 import net.onima.onimaapi.players.APIPlayer;
 import net.onima.onimaapi.saver.inventory.PlayerSaver;
 import net.onima.onimaapi.utils.Balance;
 import net.onima.onimaapi.utils.ConfigurationService;
 import net.onima.onimaapi.zone.type.Region;
+import net.onima.onimafaction.OnimaFaction;
 import net.onima.onimafaction.events.FactionDTRChangeEvent.DTRChangeCause;
 import net.onima.onimafaction.faction.EggAdvantage;
 import net.onima.onimafaction.faction.PlayerFaction;
@@ -20,7 +22,7 @@ import net.onima.onimafaction.faction.struct.DTRStatus;
 import net.onima.onimafaction.faction.struct.EggAdvantageType;
 import net.onima.onimafaction.players.Deathban;
 import net.onima.onimafaction.players.FPlayer;
-import net.onima.onimafaction.task.RegenerationEntryTask;
+import net.onima.onimafaction.workload.RegenerationWorkload;
 
 public class DeathListener implements Listener {
 	
@@ -54,7 +56,7 @@ public class DeathListener implements Listener {
 				}
 
 				if (faction.getDTRStatut() == DTRStatus.FULL)
-					RegenerationEntryTask.get().insert(faction);
+					OnimaAPI.getDistributor().get(OnimaFaction.getInstance().getWorkloadManager().getRegenerationId()).addWorkload(new RegenerationWorkload(faction));
 				
 				faction.setDTR(faction.getDTR() - dtr, DTRChangeCause.DEATH);
 				faction.setRegenCooldown(ConfigurationService.REGEN_COOLDOWN);

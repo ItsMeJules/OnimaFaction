@@ -14,6 +14,7 @@ import net.onima.onimafaction.commands.SOTWCommand;
 import net.onima.onimafaction.commands.StaffChatCommand;
 import net.onima.onimafaction.commands.TeamLocationCommand;
 import net.onima.onimafaction.commands.faction.FactionExecutor;
+import net.onima.onimafaction.commands.fastplant.FastPlantExecutor;
 import net.onima.onimafaction.commands.lives.LiveExecutor;
 
 public class CommandManager {
@@ -37,6 +38,7 @@ public class CommandManager {
 		plugin.getCommand("lives").setExecutor(new LiveExecutor());
 		plugin.getCommand("staffchat").setExecutor(new StaffChatCommand());
 		plugin.getCommand("pvp").setExecutor(new PvPCommand());
+		plugin.getCommand("fastplant").setExecutor(new FastPlantExecutor());
 	}
 	
 	public boolean forceCommand(CommandSender sender, String command, String[] args) {

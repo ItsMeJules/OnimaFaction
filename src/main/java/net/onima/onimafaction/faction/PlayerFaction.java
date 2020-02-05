@@ -25,6 +25,7 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Projections;
 
 import net.md_5.bungee.api.chat.BaseComponent;
+import net.onima.onimaapi.OnimaAPI;
 import net.onima.onimaapi.caching.UUIDCache;
 import net.onima.onimaapi.mongo.OnimaMongo;
 import net.onima.onimaapi.mongo.OnimaMongo.OnimaCollection;
@@ -34,6 +35,7 @@ import net.onima.onimaapi.utils.ConfigurationService;
 import net.onima.onimaapi.utils.JSONMessage;
 import net.onima.onimaapi.utils.Methods;
 import net.onima.onimaapi.utils.time.Time.LongTime;
+import net.onima.onimafaction.OnimaFaction;
 import net.onima.onimafaction.armorclass.ArmorClass;
 import net.onima.onimafaction.events.FactionDTRChangeEvent;
 import net.onima.onimafaction.events.FactionDTRChangeEvent.DTRChangeCause;
@@ -50,7 +52,7 @@ import net.onima.onimafaction.faction.struct.Role;
 import net.onima.onimafaction.players.Deathban;
 import net.onima.onimafaction.players.FPlayer;
 import net.onima.onimafaction.players.OfflineFPlayer;
-import net.onima.onimafaction.task.RegenerationEntryTask;
+import net.onima.onimafaction.workload.RegenerationWorkload;
 
 public class PlayerFaction extends Faction {
 	
@@ -480,8 +482,6 @@ public class PlayerFaction extends Faction {
 		
 		remove();
 		
-		RegenerationEntryTask.get().safeRemove(this);
-		
 		for (String allyName : getAllies()) {
 			PlayerFaction ally = (PlayerFaction) Faction.getFaction(allyName);
 			
@@ -495,6 +495,8 @@ public class PlayerFaction extends Faction {
 				member.setfMap(true, false);
 			}
 		});
+		
+		clearClaims();
 		
 		Iterator<UUID> iterator = members.keySet().iterator();
 		
@@ -581,10 +583,10 @@ public class PlayerFaction extends Faction {
 			claim.setDTRLoss(doc.getBoolean("dtr_loss"));
 			claim.setPriority(doc.getInteger("priority"));
 			claim.setDeathbanMultiplier(doc.getDouble("deathban_multiplier"));
-			claim.setAccessRank(doc.getString("access_rank") == null ? null : RankType.fromString(doc.getString("access_rank")));
+			claim.setAccessRank(doc.getString("access_rank") == null ? RankType.DEFAULT : RankType.fromString(doc.getString("access_rank")));
 			
 			for (Document eggDoc : doc.getList("eggs", Document.class)) {
-				EggAdvantage eggAdvantage = new EggAdvantage(EggAdvantageType.valueOf(eggDoc.getString("type")), this);
+				EggAdvantage eggAdvantage = getEggAdvantage(EggAdvantageType.valueOf(eggDoc.getString("type")));
 				
 				for (String locs : eggDoc.getList("locations", String.class)) {
 					String[] str = locs.split("@");
@@ -594,6 +596,8 @@ public class PlayerFaction extends Faction {
 				
 				claim.getEggAdvantages().add(eggAdvantage);
 			}
+			
+			claims.add(claim);
 		}
 		
 		//PlayerFaction part
@@ -616,7 +620,7 @@ public class PlayerFaction extends Faction {
 		announcement = document.getString("announcement");
 		
 		if (getDTRStatut() != DTRStatus.FULL)
-			RegenerationEntryTask.get().insert(this);
+			OnimaAPI.getDistributor().get(OnimaFaction.getInstance().getWorkloadManager().getRegenerationId()).addWorkload(new RegenerationWorkload(this));
 	}
 	
 	@Override

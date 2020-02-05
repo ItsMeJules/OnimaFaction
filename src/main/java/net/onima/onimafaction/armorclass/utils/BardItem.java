@@ -71,8 +71,6 @@ public class BardItem implements Saver {
 			PlayerFaction faction = null;
 			
 			if ((faction = fPlayer.getFaction()) != null) {
-				targets.add(player);
-				
 				for (Entity nearbyEntity : player.getNearbyEntities(ConfigurationService.BARD_BARDING_DISTANCE, ConfigurationService.BARD_BARDING_DISTANCE, ConfigurationService.BARD_BARDING_DISTANCE)) {
 					if(!(nearbyEntity instanceof Player)) continue;
 					
@@ -93,19 +91,26 @@ public class BardItem implements Saver {
 					
 					targets.add((Player) nearbyEntity);
 				}
+				
+				targets.remove(player);
+			}
+			
+			if (targets.isEmpty() && notify) {
+				player.sendMessage("§cAucun joueur a donner l'effet !");
+				return BardItemUseFinality.DENY_TARGETS_EMPTY;
 			}
 			
 			String effectNiceName = ConfigurationService.EFFECTS_NICE_NAME.get(effect.getType()), time = IntegerTime.setYMDWHMSFormat(effect.getDuration() / 20 * 1000);
 			int amplifier = effect.getAmplifier();
 			
-			if (!targets.isEmpty() && isClick) {
+			if (isClick) {
 				player.sendMessage("§6" + ConfigurationService.STAIGHT_LINE);
 				player.sendMessage(name + " §eutilisé :\n" 
 						+ " §e» §7Effet : §6" + effectNiceName + ' ' + Methods.toRomanNumber(amplifier + 1) + " §7pour §6" + time + "§7.\n"
 						+ " §e» §7Coût en énergie : §6" + power + "§7.\n"
 						+ " §e» §7Joueurs affectés : §c" + targets.size());
 				bard.removePower(power);
-				Methods.removeOneItem(player);
+				Methods.removeOneHandItem(player);
 			}
 			
 			for (Player target : targets) {
@@ -193,6 +198,7 @@ public class BardItem implements Saver {
 		DENY_ZONE,
 		DENY_POWER,
 		DENY_EFFECT_NULL,
+		DENY_TARGETS_EMPTY,
 		SUCCESS;
 	}
 	

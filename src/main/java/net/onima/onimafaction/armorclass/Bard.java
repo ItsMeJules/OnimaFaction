@@ -27,6 +27,7 @@ import net.onima.onimafaction.armorclass.type.BardArmor;
 import net.onima.onimafaction.armorclass.utils.BardItem;
 import net.onima.onimafaction.faction.PlayerFaction;
 import net.onima.onimafaction.players.FPlayer;
+import net.onima.onimafaction.task.BardPowerTask;
 
 public class Bard extends ArmorClass {
 	
@@ -171,6 +172,7 @@ public class Bard extends ArmorClass {
 	public void onEquip() {
 		super.onEquip();
 		fPlayer.getApiPlayer().sendMessage(classActivatedMessage);
+		BardPowerTask.getBards().add(this);
 	}
 	
 	@Override

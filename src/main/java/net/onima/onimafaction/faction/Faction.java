@@ -15,8 +15,8 @@ import com.google.common.collect.Sets;
 
 import net.onima.onimaapi.OnimaAPI;
 import net.onima.onimaapi.mongo.api.result.MongoQueryResult;
-import net.onima.onimaapi.rank.RankType;
 import net.onima.onimaapi.mongo.saver.NoSQLSaver;
+import net.onima.onimaapi.rank.RankType;
 import net.onima.onimaapi.utils.ConfigurationService;
 import net.onima.onimaapi.utils.Methods;
 import net.onima.onimaapi.zone.struct.Flag;
@@ -452,6 +452,8 @@ public class Faction implements FlagZone, NoSQLSaver {
 				
 				claim.getEggAdvantages().add(eggAdvantage);
 			}
+			
+			claims.add(claim);
 		}
 	}
 	
