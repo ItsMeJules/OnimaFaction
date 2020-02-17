@@ -6,6 +6,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import net.onima.onimaapi.OnimaAPI;
+import net.onima.onimaapi.cooldown.BugReportCooldown;
 import net.onima.onimaapi.cooldown.utils.Cooldown;
 import net.onima.onimaapi.gui.PacketMenu;
 import net.onima.onimaapi.utils.ConfigurationService;
@@ -114,6 +115,7 @@ public class OnimaFaction extends JavaPlugin {
 		Cooldown.register(new ReaperModeCooldown());
 		Cooldown.register(new ReaperPowerCooldown());
 		Cooldown.register(new ReaperStealthCooldown());
+		Cooldown.register(new BugReportCooldown());
 		
 		PlayerFaction.loadDeathbans();
 		WildernessFaction.init();
