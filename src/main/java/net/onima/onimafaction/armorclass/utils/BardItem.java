@@ -72,7 +72,7 @@ public class BardItem implements Saver {
 			
 			if ((faction = fPlayer.getFaction()) != null) {
 				for (Entity nearbyEntity : player.getNearbyEntities(ConfigurationService.BARD_BARDING_DISTANCE, ConfigurationService.BARD_BARDING_DISTANCE, ConfigurationService.BARD_BARDING_DISTANCE)) {
-					if(!(nearbyEntity instanceof Player)) continue;
+					if (!(nearbyEntity instanceof Player)) continue;
 					
 					Player target = (Player) nearbyEntity;
 					boolean inFaction = faction.getMembers().containsKey(target.getUniqueId());
@@ -83,6 +83,10 @@ public class BardItem implements Saver {
 					} else if (!inFaction)
 						targets.add(target);
 				}
+				
+				if (!debuff)
+					targets.add(player);
+				
 			} else if (!debuff)
 				targets.add(player);
 			else {
@@ -96,7 +100,7 @@ public class BardItem implements Saver {
 			}
 			
 			if (targets.isEmpty() && notify) {
-				player.sendMessage("§cAucun joueur a donner l'effet !");
+				player.sendMessage("§cAucun joueur à qui donner l'effet !");
 				return BardItemUseFinality.DENY_TARGETS_EMPTY;
 			}
 			
