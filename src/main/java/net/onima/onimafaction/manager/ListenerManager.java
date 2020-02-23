@@ -6,6 +6,7 @@ import org.bukkit.plugin.PluginManager;
 import net.onima.onimafaction.OnimaFaction;
 import net.onima.onimafaction.listener.ArmorClassListener;
 import net.onima.onimafaction.listener.BardListener;
+import net.onima.onimafaction.listener.ChatManagerListener;
 import net.onima.onimafaction.listener.ClaimListener;
 import net.onima.onimafaction.listener.CombatLoggerListener;
 import net.onima.onimafaction.listener.DeathListener;
@@ -65,6 +66,7 @@ public class ListenerManager {
 		pm.registerEvents(new EggAdvantageListener(), plugin);
 		pm.registerEvents(new CombatLoggerListener(), plugin);
 		pm.registerEvents(new DisguiseListener(), plugin);
+		pm.registerEvents(new ChatManagerListener(), plugin);
 	}
 	
 }

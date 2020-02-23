@@ -204,6 +204,7 @@ C:\Users\Jules\workspace\OnimaFaction\src\main\java\net\onima\onimafaction\facti
 C:\Users\Jules\workspace\OnimaFaction\src\main\java\net\onima\onimafaction\commands\faction\arguments\staff\FactionForceLeaderArgument.java
 C:\Users\Jules\workspace\OnimaFaction\src\main\java\net\onima\onimafaction\commands\faction\arguments\FactionStuckArgument.java
 C:\Users\Jules\workspace\OnimaFaction\src\main\java\net\onima\onimafaction\timed\event\BattleRoyale.java
+C:\Users\Jules\workspace\OnimaFaction\src\main\java\net\onima\onimafaction\listener\ChatManagerListener.java
 C:\Users\Jules\workspace\OnimaFaction\src\main\java\net\onima\onimafaction\cooldowns\ArcherSpeedCooldown.java
 C:\Users\Jules\workspace\OnimaFaction\src\main\java\net\onima\onimafaction\task\TimedTask.java
 C:\Users\Jules\workspace\OnimaFaction\src\main\java\net\onima\onimafaction\faction\type\WarZoneFaction.java

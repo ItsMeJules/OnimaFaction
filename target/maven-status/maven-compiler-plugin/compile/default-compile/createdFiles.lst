@@ -234,6 +234,7 @@ net\onima\onimafaction\events\FactionChatEvent.class
 net\onima\onimafaction\task\BardPowerTask.class
 net\onima\onimafaction\commands\faction\arguments\staff\FactionForceDisbandArgument.class
 net\onima\onimafaction\workload\RegenerationWorkload.class
+net\onima\onimafaction\listener\ChatManagerListener.class
 net\onima\onimafaction\armorclass\type\ReaperArmor.class
 net\onima\onimafaction\faction\claim\Claim$1.class
 net\onima\onimafaction\plants\PlantStage$CropStage.class
