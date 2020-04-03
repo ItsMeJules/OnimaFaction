@@ -64,7 +64,7 @@ public class FactionDemoteArgument extends FactionArgument {
 			Role playerRole = fPlayer.getRole();
 			Role offlineRole = offlineFPlayer.getRole();
 			
-			if (offlineRole.getValue() < playerRole.getValue()) {
+			if (offlineRole.getValue() >= playerRole.getValue()) {
 				player.sendMessage("§cVous ne pouvez pas dégrader un joueur ayant un rôle supérieur ou égal au votre !");
 				return;
 			}

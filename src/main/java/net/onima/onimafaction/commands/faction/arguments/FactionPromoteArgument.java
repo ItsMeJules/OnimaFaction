@@ -59,7 +59,7 @@ public class FactionPromoteArgument extends FactionArgument {
 		}
 		
 		if (player.getUniqueId().equals(uuid)) {
-			player.sendMessage("§cVous ne pouvez pas vous grader vous même !");
+			player.sendMessage("§cVous ne pouvez pas vous promouvoir vous même !");
 			return true;
 		}
 		
@@ -67,7 +67,7 @@ public class FactionPromoteArgument extends FactionArgument {
 			Role playerRole = fPlayer.getRole();
 			Role offlineRole = offlineFPlayer.getRole();
 			
-			if (offlineRole.getValue() < playerRole.getValue()) {
+			if (offlineRole.getValue() >= playerRole.getValue()) {
 				player.sendMessage("§cVous ne pouvez pas promouvoir des joueurs qui ont un rôle supérieur ou égal au votre !");
 				return;
 			}
